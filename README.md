@@ -1,6 +1,8 @@
 # SPA Comments
 
-A work-in-progress single-page application for posting and viewing threaded comments.
+A work-in-progress Django application for posting and viewing threaded comments.
+
+The project is being developed step by step from a server-rendered Django interface toward the SPA requirements of the test assignment.
 
 ## Current stack
 
@@ -9,19 +11,47 @@ A work-in-progress single-page application for posting and viewing threaded comm
 - Django ORM
 - PostgreSQL 17
 - Docker Compose
+- Bleach for safe HTML sanitization
 
-## Implemented foundation
+## Implemented features
 
 - Django project and `comments` application
 - PostgreSQL database running in Docker
 - Environment-based database configuration
-- Initial `Comment` model and migration
-- Threaded comments through a self-referencing `parent` relation
-- Required author name, email, optional home page, comment text, and attachment fields
+- `Comment` model with a self-referencing `parent` relation
+- Required author name and email fields
+- Optional home page field
+- Comment text field
+- Attachment field prepared for future file upload support
+- Creation of top-level comments through a browser form
+- Rendering of top-level comments on the main page
+- Creation and display of first-level comment replies
+- Default newest-first comment ordering
+- Basic CSS layout for the form and comment cards
+- Safe HTML validation for comment text
+- Allowed HTML tags: `a`, `code`, `i`, and `strong`
+- Safe link protocols: `http`, `https`, and `mailto`
+
+## Current limitations
+
+The following features are planned but not implemented yet:
+
+- Unlimited recursive rendering of nested replies
+- CAPTCHA validation
+- Image and TXT file upload validation and processing
+- Sorting controls by user name, email, and creation date
+- Pagination with 25 top-level comments per page
+- Client-side validation
+- AJAX comment preview
+- HTML formatting toolbar
+- REST API and SPA frontend
+- WebSocket updates
+- Full Dockerized application deployment
 
 ## Local setup
 
 1. Create and activate a virtual environment.
+
 2. Install dependencies:
 
    ```powershell
@@ -52,19 +82,36 @@ A work-in-progress single-page application for posting and viewing threaded comm
    python manage.py check --database default
    ```
 
+7. Start the development server:
+
+   ```powershell
+   python manage.py runserver
+   ```
+
+8. Open the application:
+
+   ```text
+   http://127.0.0.1:8000/
+   ```
+
 ## Configuration
 
-The project reads PostgreSQL settings from `.env`. The `.env` file must not be committed. Use `.env.example` as a template.
+The project reads PostgreSQL settings from `.env`.
 
-For the current local Docker setup, PostgreSQL is available at `localhost:5433`.
+Do not commit `.env`. Use `.env.example` as a configuration template.
 
-## Planned features
+For the current local Docker setup, PostgreSQL is available at:
 
-- REST API and SPA frontend
-- CAPTCHA validation
-- Safe HTML validation and XSS protection
-- Image and TXT file validation
-- Sorting and pagination
-- AJAX preview and formatting toolbar
-- WebSocket updates
-- Full Dockerized application deployment
+```text
+localhost:5433
+```
+
+## Comment rules
+
+- `author_name` is required and may contain only Latin letters and digits.
+- `email` is required and must have a valid email format.
+- `home_page` is optional and must be a valid URL when provided.
+- `text` is required.
+- Comment HTML is restricted to `a`, `code`, `i`, and `strong`.
+- Only `href` and `title` attributes are allowed for `a` tags.
+- Link protocols are restricted to `http`, `https`, and `mailto`.
