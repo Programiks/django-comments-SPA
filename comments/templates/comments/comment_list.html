@@ -1,0 +1,140 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Comments</title>
+    <link rel="stylesheet" href="{% static 'comments/styles.css' %}">
+</head>
+<body>
+    <main>
+        <h1>Comments</h1>
+
+        <section class="comment-form">
+            {% if parent_comment %}
+                <h2>
+                    Reply to {{ parent_comment.author_name }}
+                </h2>
+                <p>
+                    <a href="{% url 'comment_list' %}">
+                        Cancel reply
+                    </a>
+                </p>
+            {% else %}
+                <h2>Leave a comment</h2>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                {{ form.non_field_errors }}
+
+                <div class="form-field">
+                    {{ form.author_name.label_tag }}
+                    {{ form.author_name }}
+                    {{ form.author_name.errors }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.email.label_tag }}
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.home_page.label_tag }}
+                    {{ form.home_page }}
+                    {{ form.home_page.errors }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.text.label_tag }}
+                    {{ form.text }}
+                    {{ form.text.errors }}
+                </div>
+
+                <button type="submit">Post comment</button>
+            </form>
+        </section>
+
+        <section class="comments-list">
+            <h2>All comments</h2>
+
+            {% for comment in comments %}
+                <article class="comment">
+                    <header class="comment-header">
+                        <span class="comment-author">
+                            {{ comment.author_name }}
+                        </span>
+
+                        <time
+                            class="comment-date"
+                            datetime="{{ comment.created_at|date:'c' }}"
+                        >
+                            {{ comment.created_at|date:"M d, Y, H:i" }}
+                        </time>
+                    </header>
+
+                    <div class="comment-body">
+                        {% if comment.home_page %}
+                            <p>
+                                <a
+                                    href="{{ comment.home_page }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {{ comment.home_page }}
+                                </a>
+                            </p>
+                        {% endif %}
+
+                        <p>{{ comment.text }}</p>
+
+                        <p>
+                            <a href="{% url 'comment_list' %}?parent={{ comment.id }}">
+                                Reply
+                            </a>
+                        </p>
+                    </div>
+
+                    {% for reply in comment.replies.all %}
+                        <article class="comment comment-reply">
+                            <header class="comment-header">
+                                <span class="comment-author">
+                                    {{ reply.author_name }}
+                                </span>
+
+                                <time
+                                    class="comment-date"
+                                    datetime="{{ reply.created_at|date:'c' }}"
+                                >
+                                    {{ reply.created_at|date:"M d, Y, H:i" }}
+                                </time>
+                            </header>
+
+                            <div class="comment-body">
+                                {% if reply.home_page %}
+                                    <p>
+                                        <a
+                                            href="{{ reply.home_page }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            {{ reply.home_page }}
+                                        </a>
+                                    </p>
+                                {% endif %}
+
+                                <p>{{ reply.text }}</p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </article>
+            {% empty %}
+                <p>No comments yet.</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

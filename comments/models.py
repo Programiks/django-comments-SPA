@@ -1,6 +1,8 @@
 from django.core.validators import RegexValidator
 from django.db import models
 
+from .validators import validate_comment_html
+
 
 username_validator = RegexValidator(
     regex=r"^[A-Za-z0-9]+$",
@@ -15,7 +17,9 @@ class Comment(models.Model):
     )
     email = models.EmailField()
     home_page = models.URLField(blank=True)
-    text = models.TextField()
+    text = models.TextField(
+        validators=[validate_comment_html],
+    )
 
     parent = models.ForeignKey(
         "self",
