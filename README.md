@@ -25,7 +25,10 @@ The project is being developed step by step from a server-rendered Django interf
 - Attachment field prepared for future file upload support
 - Creation of top-level comments through a browser form
 - Rendering of top-level comments on the main page
-- Creation and display of first-level comment replies
+- Creation of replies to any comment at any nesting level
+- Recursive rendering of unlimited nested comment replies
+- Automated tests for comment creation, HTML validation, and nested replies
+- Nested-reply test coverage for multiple comment levels
 - Default newest-first comment ordering
 - Basic CSS layout for the form and comment cards
 - Safe HTML validation for comment text
@@ -36,7 +39,6 @@ The project is being developed step by step from a server-rendered Django interf
 
 The following features are planned but not implemented yet:
 
-- Unlimited recursive rendering of nested replies
 - CAPTCHA validation
 - Image and TXT file upload validation and processing
 - Sorting controls by user name, email, and creation date
