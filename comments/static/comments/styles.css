@@ -98,3 +98,18 @@ button:hover {
 .comment-reply {
     margin: 12px 0 12px 40px;
 }
+
+.comment-sorting {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.comment-sorting span {
+    margin-right: 2px;
+}
+
+.comment-sorting a {
+    display: inline-block;
+}

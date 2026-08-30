@@ -61,6 +61,35 @@
         <section class="comments-list">
             <h2>All comments</h2>
 
+            <nav class="comment-sorting" aria-label="Comment sorting">
+                <span>Sort by:</span>
+
+                <a href="{% url 'comment_list' %}?sort=author_name&direction=asc">
+                    User Name ↑
+                </a>
+
+                <a href="{% url 'comment_list' %}?sort=author_name&direction=desc">
+                    User Name ↓
+                </a>
+
+                <a href="{% url 'comment_list' %}?sort=email&direction=asc">
+                    E-mail ↑
+                </a>
+
+                <a href="{% url 'comment_list' %}?sort=email&direction=desc">
+                    E-mail ↓
+                </a>
+
+                <a href="{% url 'comment_list' %}?sort=created_at&direction=desc">
+                    Newest
+                </a>
+
+                <a href="{% url 'comment_list' %}?sort=created_at&direction=asc">
+                    Oldest
+                </a>
+            </nav>
+
+
             {% for comment in comments %}
                 {% include "comments/_comment.html" with comment=comment %}
             {% empty %}

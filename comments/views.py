@@ -23,9 +23,22 @@ def comment_list(request):
     else:
         form = CommentForm()
 
+    sort = request.GET.get("sort", "created_at")
+    direction = request.GET.get("direction", "desc")
+
+    allowed_sort_fields = {
+        "author_name": "author_name",
+        "email": "email",
+        "created_at": "created_at",
+    }
+
+    sort_field = allowed_sort_fields.get(sort, "created_at")
+    ordering = sort_field if direction == "asc" else f"-{sort_field}"
+
     comments = (
         Comment.objects
         .filter(parent__isnull=True)
+        .order_by(ordering)
         .prefetch_related("replies")
     )
 
@@ -36,5 +49,7 @@ def comment_list(request):
             "comments": comments,
             "form": form,
             "parent_comment": parent_comment,
+            "sort": sort,
+            "direction": direction,
         },
     )
