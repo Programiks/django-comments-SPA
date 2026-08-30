@@ -43,7 +43,7 @@ def comment_list(request):
         .prefetch_related("replies")
     )
 
-    paginator = Paginator(comments, 5)
+    paginator = Paginator(comments, 25)
     page_number = request.GET.get("page")
     comments = paginator.get_page(page_number)
 
