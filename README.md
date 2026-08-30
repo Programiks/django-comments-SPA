@@ -30,6 +30,10 @@ The project is being developed step by step from a server-rendered Django interf
 - Automated tests for comment creation, HTML validation, and nested replies
 - Nested-reply test coverage for multiple comment levels
 - Default newest-first comment ordering
+- Sorting controls for top-level comments by author name, email, and creation date
+- Ascending and descending sorting directions
+- Pagination with 25 top-level comments per page
+- Nested reply threads preserved within each paginated top-level comment
 - Basic CSS layout for the form and comment cards
 - Safe HTML validation for comment text
 - Allowed HTML tags: `a`, `code`, `i`, and `strong`
@@ -41,8 +45,6 @@ The following features are planned but not implemented yet:
 
 - CAPTCHA validation
 - Image and TXT file upload validation and processing
-- Sorting controls by user name, email, and creation date
-- Pagination with 25 top-level comments per page
 - Client-side validation
 - AJAX comment preview
 - HTML formatting toolbar
