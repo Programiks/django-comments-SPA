@@ -13,6 +13,7 @@ The project is being developed step by step from a server-rendered Django interf
 - Docker Compose
 - Bleach for safe HTML sanitization
 - Pillow for CAPTCHA image generation
+- Lightbox2 for image attachment previews
 
 ## Implemented features
 
@@ -23,7 +24,13 @@ The project is being developed step by step from a server-rendered Django interf
 - Required author name and email fields
 - Optional home page field
 - Comment text field
-- Attachment field prepared for future file upload support
+- File attachments for comments
+- Allowed attachment formats: JPG, GIF, PNG, and TXT
+- Image validation and proportional resizing to a maximum of 320×240 pixels
+- TXT file validation with a maximum size of 100 KB
+- Inline image attachment rendering
+- Lightbox2 image preview
+- TXT attachment links
 - Creation of top-level comments through a browser form
 - Rendering of top-level comments on the main page
 - Creation of replies to any comment at any nesting level
@@ -47,7 +54,6 @@ The project is being developed step by step from a server-rendered Django interf
 
 The following features are planned but not implemented yet:
 
-- Image and TXT file upload validation and processing
 - Client-side validation
 - AJAX comment preview
 - HTML formatting toolbar
@@ -106,6 +112,8 @@ The following features are planned but not implemented yet:
 The project reads PostgreSQL settings from `.env`.
 
 Do not commit `.env`. Use `.env.example` as a configuration template.
+
+Uploaded attachments are stored locally in `attachments/` and are ignored by Git.
 
 For the current local Docker setup, PostgreSQL is available at:
 
