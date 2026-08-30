@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from .captcha import generate_captcha_code, generate_captcha_image
 from .forms import CommentForm
 from .models import Comment
+from .services import resize_attachment_image
 
 
 def comment_list(request):
@@ -16,11 +17,15 @@ def comment_list(request):
         parent_comment = get_object_or_404(Comment, pk=parent_id)
 
     if request.method == "POST":
-        form = CommentForm(request.POST, request=request)
+        form = CommentForm(request.POST, request.FILES, request=request)
 
         if form.is_valid():
             comment = form.save(commit=False)
             comment.parent = parent_comment
+
+            if comment.attachment:
+                resize_attachment_image(comment.attachment)
+
             comment.save()
             return redirect("comments:comment_list")
     else:

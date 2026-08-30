@@ -44,6 +44,7 @@ class CommentForm(forms.ModelForm):
             "email",
             "home_page",
             "text",
+            "attachment",
         ]
         widgets = {
             "text": forms.Textarea(

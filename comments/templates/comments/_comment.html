@@ -30,6 +30,30 @@
 
         <p>{{ comment.text }}</p>
 
+        {% if comment.attachment %}
+            {% if comment.attachment.name|lower|slice:"-4:" == ".txt" %}
+                <p>
+                    <a href="{{ comment.attachment.url }}" target="_blank">
+                        View text attachment
+                    </a>
+                </p>
+            {% else %}
+                <p>
+                        <a
+                            href="{{ comment.attachment.url }}"
+                            data-lightbox="comment-{{ comment.id }}"
+                            data-title="Attachment for comment by {{ comment.author_name }}"
+                            data-alt="Attachment for comment by {{ comment.author_name }}"
+                        >
+                        <img
+                            src="{{ comment.attachment.url }}"
+                            alt="Attachment for comment by {{ comment.author_name }}"
+                        >
+                    </a>
+                </p>
+            {% endif %}
+        {% endif %}
+
         <p>
             <a href="{% url 'comments:comment_list' %}?parent={{ comment.id }}">
                 Reply

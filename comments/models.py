@@ -1,7 +1,7 @@
 from django.core.validators import RegexValidator
 from django.db import models
 
-from .validators import validate_comment_html
+from .validators import validate_attachment, validate_comment_html
 
 
 username_validator = RegexValidator(
@@ -31,6 +31,7 @@ class Comment(models.Model):
 
     attachment = models.FileField(
         upload_to="attachments/%Y/%m/%d/",
+        validators=[validate_attachment],
         null=True,
         blank=True,
     )

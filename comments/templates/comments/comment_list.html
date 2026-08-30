@@ -6,6 +6,10 @@
     <meta charset="UTF-8">
     <title>Comments</title>
     <link rel="stylesheet" href="{% static 'comments/styles.css' %}">
+    <link
+    rel="stylesheet"
+    href="{% static 'comments/lightbox/css/lightbox.css' %}"
+>
 </head>
 <body>
     <main>
@@ -25,7 +29,7 @@
                 <h2>Leave a comment</h2>
             {% endif %}
 
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
                 {{ form.non_field_errors }}
@@ -52,6 +56,12 @@
                     {{ form.text.label_tag }}
                     {{ form.text }}
                     {{ form.text.errors }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.attachment.label_tag }}
+                    {{ form.attachment }}
+                    {{ form.attachment.errors }}
                 </div>
 
                 <div class="form-field">
@@ -127,5 +137,9 @@
             {% endif %}
         </section>
     </main>
+
+    <script src="{% static 'comments/lightbox/js/lightbox-plus-jquery.js' %}">
+
+    </script>
 </body>
 </html>
