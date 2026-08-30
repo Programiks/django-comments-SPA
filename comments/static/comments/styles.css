@@ -113,3 +113,14 @@ button:hover {
 .comment-sorting a {
     display: inline-block;
 }
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.pagination span {
+    color: #667085;
+}

@@ -95,6 +95,26 @@
             {% empty %}
                 <p>No comments yet.</p>
             {% endfor %}
+
+            {% if comments.paginator.num_pages > 1 %}
+                <nav class="pagination" aria-label="Comments pagination">
+                    {% if comments.has_previous %}
+                        <a href="{% url 'comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.previous_page_number }}">
+                            Previous
+                        </a>
+                    {% endif %}
+
+                    <span>
+                        Page {{ comments.number }} of {{ comments.paginator.num_pages }}
+                    </span>
+
+                    {% if comments.has_next %}
+                        <a href="{% url 'comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.next_page_number }}">
+                            Next
+                        </a>
+                    {% endif %}
+                </nav>
+            {% endif %}
         </section>
     </main>
 </body>

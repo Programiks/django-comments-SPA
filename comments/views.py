@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.paginator import Paginator
 
 from .forms import CommentForm
 from .models import Comment
@@ -41,6 +42,10 @@ def comment_list(request):
         .order_by(ordering)
         .prefetch_related("replies")
     )
+
+    paginator = Paginator(comments, 5)
+    page_number = request.GET.get("page")
+    comments = paginator.get_page(page_number)
 
     return render(
         request,
