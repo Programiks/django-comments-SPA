@@ -12,6 +12,7 @@ The project is being developed step by step from a server-rendered Django interf
 - PostgreSQL 17
 - Docker Compose
 - Bleach for safe HTML sanitization
+- Pillow for CAPTCHA image generation
 
 ## Implemented features
 
@@ -38,12 +39,14 @@ The project is being developed step by step from a server-rendered Django interf
 - Safe HTML validation for comment text
 - Allowed HTML tags: `a`, `code`, `i`, and `strong`
 - Safe link protocols: `http`, `https`, and `mailto`
+- Server-side CAPTCHA generation with Pillow
+- CAPTCHA image validation using the Django session
+- CAPTCHA input field with readable generated code
 
 ## Current limitations
 
 The following features are planned but not implemented yet:
 
-- CAPTCHA validation
 - Image and TXT file upload validation and processing
 - Client-side validation
 - AJAX comment preview
@@ -95,7 +98,7 @@ The following features are planned but not implemented yet:
 8. Open the application:
 
    ```text
-   http://127.0.0.1:8000/
+   http://127.0.0.1:8000/comments/
    ```
 
 ## Configuration
