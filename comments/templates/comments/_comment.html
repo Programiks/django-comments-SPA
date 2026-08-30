@@ -31,7 +31,7 @@
         <p>{{ comment.text }}</p>
 
         <p>
-            <a href="{% url 'comment_list' %}?parent={{ comment.id }}">
+            <a href="{% url 'comments:comment_list' %}?parent={{ comment.id }}">
                 Reply
             </a>
         </p>

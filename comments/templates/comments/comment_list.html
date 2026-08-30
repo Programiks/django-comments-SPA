@@ -17,7 +17,7 @@
                     Reply to {{ parent_comment.author_name }}
                 </h2>
                 <p>
-                    <a href="{% url 'comment_list' %}">
+                    <a href="{% url 'comments:comment_list' %}">
                         Cancel reply
                     </a>
                 </p>
@@ -54,6 +54,16 @@
                     {{ form.text.errors }}
                 </div>
 
+                <div class="form-field">
+                    {{ form.captcha.label_tag }}
+                    <img
+                        src="{% url 'comments:captcha_image' %}"
+                        alt="CAPTCHA code"
+                    >
+                    {{ form.captcha }}
+                    {{ form.captcha.errors }}
+                </div>
+
                 <button type="submit">Post comment</button>
             </form>
         </section>
@@ -64,27 +74,27 @@
             <nav class="comment-sorting" aria-label="Comment sorting">
                 <span>Sort by:</span>
 
-                <a href="{% url 'comment_list' %}?sort=author_name&direction=asc">
+                <a href="{% url 'comments:comment_list' %}?sort=author_name&direction=asc">
                     User Name ↑
                 </a>
 
-                <a href="{% url 'comment_list' %}?sort=author_name&direction=desc">
+                <a href="{% url 'comments:comment_list' %}?sort=author_name&direction=desc">
                     User Name ↓
                 </a>
 
-                <a href="{% url 'comment_list' %}?sort=email&direction=asc">
+                <a href="{% url 'comments:comment_list' %}?sort=email&direction=asc">
                     E-mail ↑
                 </a>
 
-                <a href="{% url 'comment_list' %}?sort=email&direction=desc">
+                <a href="{% url 'comments:comment_list' %}?sort=email&direction=desc">
                     E-mail ↓
                 </a>
 
-                <a href="{% url 'comment_list' %}?sort=created_at&direction=desc">
+                <a href="{% url 'comments:comment_list' %}?sort=created_at&direction=desc">
                     Newest
                 </a>
 
-                <a href="{% url 'comment_list' %}?sort=created_at&direction=asc">
+                <a href="{% url 'comments:comment_list' %}?sort=created_at&direction=asc">
                     Oldest
                 </a>
             </nav>
@@ -99,7 +109,7 @@
             {% if comments.paginator.num_pages > 1 %}
                 <nav class="pagination" aria-label="Comments pagination">
                     {% if comments.has_previous %}
-                        <a href="{% url 'comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.previous_page_number }}">
+                        <a href="{% url 'comments:comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.previous_page_number }}">
                             Previous
                         </a>
                     {% endif %}
@@ -109,7 +119,7 @@
                     </span>
 
                     {% if comments.has_next %}
-                        <a href="{% url 'comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.next_page_number }}">
+                        <a href="{% url 'comments:comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.next_page_number }}">
                             Next
                         </a>
                     {% endif %}

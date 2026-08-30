@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 
+from .captcha import generate_captcha_code, generate_captcha_image
 from .forms import CommentForm
 from .models import Comment
 
@@ -14,15 +16,15 @@ def comment_list(request):
         parent_comment = get_object_or_404(Comment, pk=parent_id)
 
     if request.method == "POST":
-        form = CommentForm(request.POST)
+        form = CommentForm(request.POST, request=request)
 
         if form.is_valid():
             comment = form.save(commit=False)
             comment.parent = parent_comment
             comment.save()
-            return redirect("comment_list")
+            return redirect("comments:comment_list")
     else:
-        form = CommentForm()
+        form = CommentForm(request=request)
 
     sort = request.GET.get("sort", "created_at")
     direction = request.GET.get("direction", "desc")
@@ -58,3 +60,12 @@ def comment_list(request):
             "direction": direction,
         },
     )
+
+
+def captcha_image(request):
+    """Generate a CAPTCHA image and store its code in the session."""
+    code = generate_captcha_code()
+    request.session["captcha_code"] = code
+
+    image = generate_captcha_image(code)
+    return HttpResponse(image, content_type="image/png")

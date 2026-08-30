@@ -20,7 +20,6 @@ class CommentHtmlValidationTest(TestCase):
         )
         self.assertEqual(Comment.objects.count(), 1)
 
-
     def test_reject_script_tag(self):
         from django.core.exceptions import ValidationError
 

@@ -124,3 +124,11 @@ button:hover {
 .pagination span {
     color: #667085;
 }
+
+.form-field img{
+    display: block;
+    width: 240px;
+    height: 80px;
+    margin: 8px 0;
+    object-fit: contain;
+}
