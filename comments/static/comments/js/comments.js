@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const textInput = form.querySelector('#id_text');
     const attachmentInput = form.querySelector('#id_attachment');
     const errorContainer = form.querySelector('#client-form-errors');
+    const previewButton = form.querySelector('#preview-button');
+    const previewContainer = document.querySelector('#comment-preview');
 
     const MIN_TEXT_LENGTH = 2;
     const MAX_TEXT_LENGTH = 2000;
@@ -101,6 +103,60 @@ document.addEventListener('DOMContentLoaded', () => {
         return errors.length === 0;
     }
 
+    /**
+     * Send text to the server and render a preview without reloading the page.
+     */
+    async function showPreview() {
+        const text = textInput.value;
+
+        // Basic validation before sending
+        const textError = validateText();
+        if (textError) {
+            showErrors([textError]);
+            if (previewContainer) {
+                previewContainer.hidden = true;
+                previewContainer.textContent = '';
+            }
+            return;
+        }
+
+        if (!previewContainer) {
+            return;
+        }
+
+        // Get CSRF token from the hidden input in the form
+        const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+        try {
+            const response = await fetch('/comments/preview/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: `text=${encodeURIComponent(text)}`
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+
+            if (data.preview_html) {
+                previewContainer.innerHTML = data.preview_html;
+                previewContainer.hidden = false;
+            } else {
+                previewContainer.hidden = true;
+                previewContainer.textContent = '';
+            }
+        } catch (error) {
+            // On error, hide preview
+            previewContainer.hidden = true;
+            previewContainer.textContent = '';
+        }
+    }
+
     // Prevent form submission if validation fails
     form.addEventListener('submit', (event) => {
         if (!validateForm()) {
@@ -111,6 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Revalidate on text input and attachment change
     textInput.addEventListener('input', validateForm);
     attachmentInput.addEventListener('change', validateForm);
+
+    // Preview button handler
+    if (previewButton) {
+        previewButton.addEventListener('click', showPreview);
+    }
 
     const toolbarButtons = form.querySelectorAll('.html-toolbar button');
 

@@ -56,12 +56,13 @@ The project is being developed step by step from a server-rendered Django interf
 - CAPTCHA input field with readable generated code
 - HTML formatting toolbar with `[i]`, `[strong]`, `[code]`, and `[a]` buttons
 - Client-side insertion of allowed HTML tags via toolbar
+- AJAX comment preview with server-side HTML sanitization
+- Preservation of line breaks in newly created comments
 
 ## Current limitations
 
 The following features are planned but not implemented yet:
 
-- AJAX comment preview
 - REST API and SPA frontend
 - WebSocket updates
 - Full Dockerized application deployment

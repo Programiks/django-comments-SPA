@@ -1,12 +1,16 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
+
 
 from .captcha import generate_captcha_code, generate_captcha_image
 from .forms import CommentForm
 from .models import Comment
 from .services import resize_attachment_image
-
+from .validators import sanitize_comment_html
 
 def comment_list(request):
     """Display comments and create top-level comments or replies."""
@@ -22,6 +26,7 @@ def comment_list(request):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.parent = parent_comment
+            comment.text = comment.text.replace("\n", "<br>")
 
             if comment.attachment:
                 resize_attachment_image(comment.attachment)
@@ -65,6 +70,18 @@ def comment_list(request):
             "direction": direction,
         },
     )
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def comment_preview(request):
+    """
+    Return sanitized HTML preview of the comment text.
+    Expects 'text' in POST data, returns JSON with 'preview_html'.
+    """
+    text = request.POST.get("text", "")
+    sanitized = sanitize_comment_html(text)
+    return JsonResponse({"preview_html": sanitized})
 
 
 def captcha_image(request):
