@@ -185,3 +185,10 @@ button:hover {
 .errorlist li {
     margin: 0;
 }
+
+.html-toolbar button {
+    height: 20px;
+    line-height: 20px;
+    padding: 0 8px;
+    font-size: 13px;
+}

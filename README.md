@@ -54,13 +54,14 @@ The project is being developed step by step from a server-rendered Django interf
 - Server-side CAPTCHA generation with Pillow
 - CAPTCHA image validation using the Django session
 - CAPTCHA input field with readable generated code
+- HTML formatting toolbar with `[i]`, `[strong]`, `[code]`, and `[a]` buttons
+- Client-side insertion of allowed HTML tags via toolbar
 
 ## Current limitations
 
 The following features are planned but not implemented yet:
 
 - AJAX comment preview
-- HTML formatting toolbar
 - REST API and SPA frontend
 - WebSocket updates
 - Full Dockerized application deployment

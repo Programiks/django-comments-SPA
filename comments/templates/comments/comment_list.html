@@ -57,6 +57,14 @@
 
                 <div class="form-field">
                     {{ form.text.label_tag }}
+
+                <div class="html-toolbar" role="toolbar" aria-label="HTML formatting">
+                    <button type="button" data-tag="i">[i]</button>
+                    <button type="button" data-tag="strong">[strong]</button>
+                    <button type="button" data-tag="code">[code]</button>
+                    <button type="button" data-tag="a">[a]</button>
+                </div>
+
                     {{ form.text }}
                     {{ form.text.errors }}
                 </div>

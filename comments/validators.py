@@ -13,6 +13,10 @@ ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 
 
 def sanitize_comment_html(value: str) -> str:
+    """
+    Sanitize comment HTML by allowing only safe tags, attributes, and protocols.
+    Returns cleaned HTML string.
+    """
     return bleach.clean(
         value,
         tags=ALLOWED_TAGS,
@@ -23,9 +27,17 @@ def sanitize_comment_html(value: str) -> str:
 
 
 def validate_comment_html(value: str) -> None:
-    sanitized_value = sanitize_comment_html(value)
+    """
+    Validate that comment HTML uses only allowed tags and attributes.
+    Raises ValidationError if the sanitized HTML differs from the input.
+    Normalizes line endings to avoid false positives due to \\r\\n vs \\n.
+    """
+    # Normalize line endings to match bleach behavior
+    normalized = value.replace("\r\n", "\n").replace("\r", "\n")
 
-    if sanitized_value != value:
+    sanitized_value = sanitize_comment_html(normalized)
+
+    if sanitized_value != normalized:
         raise ValidationError(
             "Comment text contains unsupported or unsafe HTML."
         )
@@ -37,6 +49,11 @@ MAX_TEXT_FILE_SIZE = 100 * 1024
 
 
 def validate_attachment(file) -> None:
+    """
+    Validate attachment file type and size.
+    Allows JPG, PNG, GIF images and TXT files (max 100 KB for TXT).
+    Raises ValidationError if the file is invalid.
+    """
     extension = Path(file.name).suffix.lower()
 
     if extension not in ALLOWED_ATTACHMENT_EXTENSIONS:
