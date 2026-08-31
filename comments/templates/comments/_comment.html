@@ -28,7 +28,7 @@
             </p>
         {% endif %}
 
-        <p>{{ comment.text }}</p>
+        <p>{{ comment.text|safe }}</p>
 
         {% if comment.attachment %}
             {% if comment.attachment.name|lower|slice:"-4:" == ".txt" %}

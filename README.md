@@ -46,6 +46,11 @@ The project is being developed step by step from a server-rendered Django interf
 - Safe HTML validation for comment text
 - Allowed HTML tags: `a`, `code`, `i`, and `strong`
 - Safe link protocols: `http`, `https`, and `mailto`
+- Rendering of server-validated allowed HTML in comments
+- Client-side validation for comment text length
+- Client-side attachment validation for allowed file extensions
+- Client-side TXT attachment size validation up to 100 KB
+- Styled client-side and server-side form validation errors
 - Server-side CAPTCHA generation with Pillow
 - CAPTCHA image validation using the Django session
 - CAPTCHA input field with readable generated code
@@ -54,7 +59,6 @@ The project is being developed step by step from a server-rendered Django interf
 
 The following features are planned but not implemented yet:
 
-- Client-side validation
 - AJAX comment preview
 - HTML formatting toolbar
 - REST API and SPA frontend

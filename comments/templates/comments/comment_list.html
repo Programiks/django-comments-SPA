@@ -29,10 +29,13 @@
                 <h2>Leave a comment</h2>
             {% endif %}
 
-            <form method="post" enctype="multipart/form-data">
+            <form id="comment-form" method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
 
                 {{ form.non_field_errors }}
+
+                <div id="client-form-errors" class="form-errors" role="alert"
+                     aria-live="polite" hidden></div>
 
                 <div class="form-field">
                     {{ form.author_name.label_tag }}
@@ -138,8 +141,7 @@
         </section>
     </main>
 
-    <script src="{% static 'comments/lightbox/js/lightbox-plus-jquery.js' %}">
-
-    </script>
+    <script src="{% static 'comments/lightbox/js/lightbox-plus-jquery.js' %}"></script>
+    <script src="{% static 'comments/js/comments.js' %}"></script>
 </body>
 </html>

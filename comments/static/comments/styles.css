@@ -154,3 +154,34 @@ button:hover {
 .form-field input[type="file"]::file-selector-button:hover {
     background: #315b9b;
 }
+
+.form-errors {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    color: #842029;
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+    border-radius: 4px;
+}
+
+.form-errors[hidden] {
+    display: none;
+}
+
+.form-errors ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.errorlist {
+    margin: 8px 0 0;
+    padding: 10px 14px 10px 34px;
+    color: #842029;
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+    border-radius: 4px;
+}
+
+.errorlist li {
+    margin: 0;
+}
