@@ -56,6 +56,7 @@ h1 {
 button {
     padding: 10px 18px;
     border: 0;
+    margin-right: 2px;
     border-radius: 4px;
     color: #ffffff;
     background: #3f6fba;
@@ -128,7 +129,7 @@ button:hover {
 .form-field img{
     display: block;
     width: 240px;
-    height: 80px;
+    height: 60px;
     margin: 8px 0;
     object-fit: contain;
 }
@@ -189,8 +190,9 @@ button:hover {
 .html-toolbar button {
     height: 20px;
     line-height: 20px;
+    margin-right: 2px;
     padding: 0 8px;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .comment-preview {
@@ -220,4 +222,11 @@ button:hover {
 
 .comment-body p {
     margin: 0;
+}
+
+
+/* Narrow file chooser button*/
+#id_attachment::file-selector-button {
+    padding: 6px 10px;
+    font-size: 0.6rem;
 }

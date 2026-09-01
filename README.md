@@ -59,12 +59,48 @@ The project is being developed step by step from a server-rendered Django interf
 - AJAX comment preview with server-side HTML sanitization
 - Preservation of line breaks in newly created comments
 
+## Phase 1: Backend-first implementation
+
+All features listed above were initially implemented entirely on the backend using Django. This phase demonstrates server-side capabilities:
+
+- Full form handling and validation in Django.
+- Server-side CAPTCHA generation and verification.
+- File upload handling with image resizing and TXT size validation.
+- Nested comments with recursive rendering.
+- Sorting and pagination of root comments.
+- Server-side HTML sanitization and allowed-tag enforcement.
+- AJAX preview with server-side rendering.
+
+At the end of Phase 1, the application was fully functional with server-rendered templates and minimal JavaScript.
+
+## Phase 2: Vue frontend enhancement
+
+The second phase enhances the existing Django application with Vue 3. The backend remains the source of truth for validation, security, and persistence.
+
+Implemented Vue features:
+
+- Reactive form state managed with `v-model`.
+- Client-side validation:
+  - User Name is required and accepts only Latin letters and digits;
+  - E-mail is required and checked for a basic email format;
+  - Home page is optional and checked as an HTTP/HTTPS URL;
+  - CAPTCHA is required on the client; its actual value is verified on the server;
+  - comment text is checked for length, allowed tags, and tag pairing;
+  - attachments are checked for allowed file types and TXT size.
+- Instant validation-error display without page reload.
+- AJAX comment preview without page reload.
+- HTML tag toolbar: `[i]`, `[strong]`, `[code]`, `[a]`.
+- Removal of the legacy JavaScript implementation in favor of Vue.
+
 ## Current limitations
 
 The following features are planned but not implemented yet:
 
-- REST API and SPA frontend
 - WebSocket updates
+- Queue
+- Cache
+- Events
+- JWT
 - Full Dockerized application deployment
 
 ## Local setup

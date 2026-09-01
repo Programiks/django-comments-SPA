@@ -15,81 +15,86 @@
     <main>
         <h1>Comments</h1>
 
-        <section class="comment-form">
+        <section class="comment-form" id="vue-app">
             {% if parent_comment %}
-                <h2>
-                    Reply to {{ parent_comment.author_name }}
-                </h2>
+                <h2>Reply to {{ parent_comment.author_name }}</h2>
                 <p>
-                    <a href="{% url 'comments:comment_list' %}">
-                        Cancel reply
-                    </a>
+                    <a href="{% url 'comments:comment_list' %}">Cancel reply</a>
                 </p>
             {% else %}
                 <h2>Leave a comment</h2>
             {% endif %}
 
-            <form id="comment-form" method="post" enctype="multipart/form-data" novalidate>
+            <form id="comment-form" method="post" enctype="multipart/form-data" novalidate @submit="handleSubmit">
                 {% csrf_token %}
 
-                {{ form.non_field_errors }}
-
-                <div id="client-form-errors" class="form-errors" role="alert"
-                     aria-live="polite" hidden></div>
-
-                <div class="form-field">
-                    {{ form.author_name.label_tag }}
-                    {{ form.author_name }}
-                    {{ form.author_name.errors }}
+                <div
+                    id="client-form-errors"
+                    class="form-errors"
+                    role="alert"
+                    aria-live="polite"
+                    v-if="errors && errors.length"
+                >
+                    <strong>Validation errors:</strong>
+                    <ul>
+                        <li v-for="(error, i) in errors" :key="i" v-text="error"></li>
+                    </ul>
                 </div>
 
                 <div class="form-field">
-                    {{ form.email.label_tag }}
-                    {{ form.email }}
-                    {{ form.email.errors }}
+                    <label for="id_author_name">Author name</label>
+                    <input type="text" name="author_name" id="id_author_name" v-model="form.author_name">
                 </div>
 
                 <div class="form-field">
-                    {{ form.home_page.label_tag }}
-                    {{ form.home_page }}
-                    {{ form.home_page.errors }}
+                    <label for="id_email">Email</label>
+                    <input type="email" name="email" id="id_email" v-model="form.email">
                 </div>
 
                 <div class="form-field">
-                    {{ form.text.label_tag }}
-
-                <div class="html-toolbar" role="toolbar" aria-label="HTML formatting">
-                    <button type="button" data-tag="i">[i]</button>
-                    <button type="button" data-tag="strong">[strong]</button>
-                    <button type="button" data-tag="code">[code]</button>
-                    <button type="button" data-tag="a">[a]</button>
-                </div>
-
-                    {{ form.text }}
-                    {{ form.text.errors }}
+                    <label for="id_home_page">Home page</label>
+                    <input type="url" name="home_page" id="id_home_page" v-model="form.home_page">
                 </div>
 
                 <div class="form-field">
-                    {{ form.attachment.label_tag }}
-                    {{ form.attachment }}
-                    {{ form.attachment.errors }}
+                    <label for="id_text">Text</label>
+
+                    <div class="html-toolbar" role="toolbar" aria-label="HTML formatting">
+                        <button type="button" @click="insertTag('i')">[i]</button>
+                        <button type="button" @click="insertTag('strong')">[strong]</button>
+                        <button type="button" @click="insertTag('code')">[code]</button>
+                        <button type="button" @click="insertTag('a')">[a]</button>
+                    </div>
+
+                    <textarea
+                        name="text"
+                        id="id_text"
+                        v-model="form.text"
+                        @input="validateForm"
+                    ></textarea>
                 </div>
 
                 <div class="form-field">
-                    {{ form.captcha.label_tag }}
-                    <img
-                        src="{% url 'comments:captcha_image' %}"
-                        alt="CAPTCHA code"
+                    <label for="id_attachment">Attachment</label>
+                    <input
+                        type="file"
+                        name="attachment"
+                        id="id_attachment"
+                        @change="handleAttachmentChange"
                     >
-                    {{ form.captcha }}
-                    {{ form.captcha.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_captcha">CAPTCHA</label>
+                    <img src="{% url 'comments:captcha_image' %}" alt="CAPTCHA code">
+                    <input type="text" name="captcha" id="id_captcha" v-model="form.captcha">
                 </div>
 
                 <button type="submit">Post comment</button>
-                <button type="button" id="preview-button">Preview</button>
+                <button type="button" @click="showPreview">Preview</button>
             </form>
-            <!-- Preview container -->
-            <div id="comment-preview" class="comment-preview" hidden></div>
+
+            <div id="comment-preview" class="comment-preview" v-if="showPreviewContainer" v-html="previewHtml"></div>
         </section>
 
         <section class="comments-list">
@@ -153,6 +158,7 @@
     </main>
 
     <script src="{% static 'comments/lightbox/js/lightbox-plus-jquery.js' %}"></script>
-    <script src="{% static 'comments/js/comments.js' %}"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="{% static 'comments/js/vue-app.js' %}"></script>
 </body>
 </html>
