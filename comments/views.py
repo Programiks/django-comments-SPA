@@ -4,7 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.csrf import csrf_exempt
-
+from django.core.cache import cache
 
 from .captcha import generate_captcha_code, generate_captcha_image
 from .forms import CommentForm
@@ -32,6 +32,8 @@ def comment_list(request):
                 resize_attachment_image(comment.attachment)
 
             comment.save()
+            # Скидаємо кеш після створення коментаря
+            cache.clear()
             return redirect("comments:comment_list")
     else:
         form = CommentForm(request=request)
@@ -48,16 +50,48 @@ def comment_list(request):
     sort_field = allowed_sort_fields.get(sort, "created_at")
     ordering = sort_field if direction == "asc" else f"-{sort_field}"
 
-    comments = (
+    # Формуємо унікальний ключ кешу для цього запиту
+    cache_key = f"comments_page_{request.GET.get('page', '1')}_{sort}_{direction}"
+
+    # Пробуємо взяти з кешу
+    cached_data = cache.get(cache_key)
+    if cached_data is not None:
+        comments, paginator_count = cached_data
+        # Відновлюємо пагінатор з кешованих даних
+        comments_qs = (
+            Comment.objects
+            .filter(parent__isnull=True)
+            .order_by(ordering)
+        )
+        paginator = Paginator(comments_qs, 25)
+        page_number = request.GET.get("page")
+        comments = paginator.get_page(page_number)
+        return render(
+            request,
+            "comments/comment_list.html",
+            {
+                "comments": comments,
+                "form": form,
+                "parent_comment": parent_comment,
+                "sort": sort,
+                "direction": direction,
+            },
+        )
+
+    # Якщо в кеші немає — робимо запит до БД
+    comments_qs = (
         Comment.objects
         .filter(parent__isnull=True)
         .order_by(ordering)
         .prefetch_related("replies")
     )
 
-    paginator = Paginator(comments, 25)
+    paginator = Paginator(comments_qs, 25)
     page_number = request.GET.get("page")
     comments = paginator.get_page(page_number)
+
+    # Кешуємо результат (список об'єктів + кількість)
+    cache.set(cache_key, (list(comments_qs), paginator.count), 60)  # 60 секунд
 
     return render(
         request,

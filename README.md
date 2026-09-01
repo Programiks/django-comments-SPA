@@ -14,6 +14,7 @@ The project is being developed step by step from a server-rendered Django interf
 - Bleach for safe HTML sanitization
 - Pillow for CAPTCHA image generation
 - Lightbox2 for image attachment previews
+- Django cache framework (LocMemCache)
 
 ## Implemented features
 
@@ -58,7 +59,7 @@ The project is being developed step by step from a server-rendered Django interf
 - Client-side insertion of allowed HTML tags via toolbar
 - AJAX comment preview with server-side HTML sanitization
 - Preservation of line breaks in newly created comments
-- JWT-based authentication(in phase2):
+- JWT-based authentication (in phase 2):
   - User registration and login via REST API (`/api/auth/register/`, `/api/auth/login/`);
   - JWT access/refresh tokens using djangorestframework-simplejwt;
   - Token stored in localStorage and sent with requests;
@@ -66,6 +67,10 @@ The project is being developed step by step from a server-rendered Django interf
   - Restricted image attachments:
     - non-authenticated users cannot upload files;
     - non-authenticated users do not see image attachments in comments.
+- Cache for comment list (in phase 2):
+  - Django cache framework (`django.core.cache`) with `LocMemCache` backend;
+  - Server-side caching of comment list queries based on page, sort field, and direction;
+  - Cache invalidation on new comment creation via `cache.clear()`.
 
 ## Phase 1: Backend-first implementation
 
@@ -106,7 +111,6 @@ The following features are planned but not implemented yet:
 
 - WebSocket updates
 - Queue
-- Cache
 - Events
 - Full Dockerized application deployment
 
