@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "comments.middleware.AutoPublishQueueMiddleware",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -168,6 +169,11 @@ LOGGING = {
     },
     "loggers": {
         "comments.signals": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "comments.middleware": {
             "handlers": ["console"],
             "level": "INFO",
             "propagate": False,

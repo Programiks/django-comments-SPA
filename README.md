@@ -75,6 +75,11 @@ The project is being developed step by step from a server-rendered Django interf
   - Django signals (`post_save` on `Comment` model);
   - `comment_created` event logged on every new comment;
   - Decoupled event handling ready for future extensions (emails, queues, analytics).
+- Comment queue (in phase 2):
+  - New comments are not published immediately.
+  - They are saved to the database with `status = "pending"` and become visible only after the queue is processed.
+  - Queue processing happens automatically after each request via middleware.
+  - This setup can be easily replaced with a background worker (e.g. Celery) without changing the core logic.
 
 ## Phase 1: Backend-first implementation
 
@@ -114,7 +119,6 @@ Implemented Vue features:
 The following features are planned but not implemented yet:
 
 - WebSocket updates
-- Queue
 - Full Dockerized application deployment
 
 ## Local setup

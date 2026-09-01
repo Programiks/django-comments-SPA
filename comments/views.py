@@ -32,7 +32,7 @@ def comment_list(request):
                 resize_attachment_image(comment.attachment)
 
             comment.save()
-            # Скидаємо кеш після створення коментаря
+            # Clear cache after creating a comment
             cache.clear()
             return redirect("comments:comment_list")
     else:
@@ -50,17 +50,17 @@ def comment_list(request):
     sort_field = allowed_sort_fields.get(sort, "created_at")
     ordering = sort_field if direction == "asc" else f"-{sort_field}"
 
-    # Формуємо унікальний ключ кешу для цього запиту
+    # Build a unique cache key for this request
     cache_key = f"comments_page_{request.GET.get('page', '1')}_{sort}_{direction}"
 
-    # Пробуємо взяти з кешу
+    # Try to get from cache
     cached_data = cache.get(cache_key)
     if cached_data is not None:
         comments, paginator_count = cached_data
-        # Відновлюємо пагінатор з кешованих даних
+        # Rebuild paginator from cached data
         comments_qs = (
             Comment.objects
-            .filter(parent__isnull=True)
+            .filter(parent__isnull=True, status=Comment.STATUS_PUBLISHED)
             .order_by(ordering)
         )
         paginator = Paginator(comments_qs, 25)
@@ -78,10 +78,10 @@ def comment_list(request):
             },
         )
 
-    # Якщо в кеші немає — робимо запит до БД
+    # If not in cache, query the database
     comments_qs = (
         Comment.objects
-        .filter(parent__isnull=True)
+        .filter(parent__isnull=True, status=Comment.STATUS_PUBLISHED)
         .order_by(ordering)
         .prefetch_related("replies")
     )
@@ -90,8 +90,8 @@ def comment_list(request):
     page_number = request.GET.get("page")
     comments = paginator.get_page(page_number)
 
-    # Кешуємо результат (список об'єктів + кількість)
-    cache.set(cache_key, (list(comments_qs), paginator.count), 60)  # 60 секунд
+    # Cache the result (list of objects + count)
+    cache.set(cache_key, (list(comments_qs), paginator.count), 60)  # 60 seconds
 
     return render(
         request,

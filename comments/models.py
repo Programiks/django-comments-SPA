@@ -11,6 +11,14 @@ username_validator = RegexValidator(
 
 
 class Comment(models.Model):
+    STATUS_PENDING = "pending"
+    STATUS_PUBLISHED = "published"
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_PUBLISHED, "Published"),
+    ]
+
     author_name = models.CharField(
         max_length=100,
         validators=[username_validator],
@@ -42,12 +50,19 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+    )
+
     class Meta:
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["-created_at"]),
             models.Index(fields=["author_name"]),
             models.Index(fields=["email"]),
+            models.Index(fields=["status"]),
         ]
 
     def __str__(self):
