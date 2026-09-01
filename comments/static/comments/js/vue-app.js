@@ -3,6 +3,21 @@ const { createApp } = Vue;
 createApp({
     data() {
         return {
+            // Auth state (single modal)
+            isLoggedIn: false,
+            accessToken: null,
+
+            showAuthModal: false,
+            isLoginMode: true,
+
+            authForm: {
+                username: '',
+                password: '',
+                passwordConfirm: '',
+                email: '',
+            },
+
+            // Comment form
             form: {
                 author_name: '',
                 email: '',
@@ -17,7 +32,212 @@ createApp({
         };
     },
 
+    created() {
+        this.loadAuthFromStorage();
+    },
+
     methods: {
+        // ---------- Auth methods ----------
+
+        loadAuthFromStorage() {
+            const token = localStorage.getItem('access_token');
+            const username = localStorage.getItem('current_username');
+            const email = localStorage.getItem('current_email');
+
+            if (token) {
+                this.accessToken = token;
+                this.isLoggedIn = true;
+            }
+
+            if (username) {
+                this.currentUsername = username;
+                this.form.author_name = username;
+            }
+
+            if (email) {
+                this.form.email = email;
+            }
+        },
+
+        saveToken(token) {
+            this.accessToken = token;
+            this.isLoggedIn = true;
+            localStorage.setItem('access_token', token);
+
+            if (this.currentUsername) {
+                localStorage.setItem('current_username', this.currentUsername);
+            }
+        },
+
+        clearToken() {
+            this.accessToken = null;
+            this.isLoggedIn = false;
+            this.currentUsername = '';
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('current_username');
+            localStorage.removeItem('current_email');
+        },
+
+        openLoginModal() {
+            this.isLoginMode = true;
+            this.authForm = {
+                username: '',
+                password: '',
+                passwordConfirm: '',
+                email: '',
+            };
+            this.showAuthModal = true;
+        },
+
+        closeAuthModal() {
+            this.showAuthModal = false;
+        },
+
+        switchToRegister() {
+            this.isLoginMode = false;
+            this.authForm.passwordConfirm = '';
+        },
+
+        switchToLogin() {
+            this.isLoginMode = true;
+        },
+
+        async handleAuthSubmit() {
+            if (!this.isLoginMode) {
+                // Registration
+                await this.register();
+                return;
+            }
+
+            // Login
+            await this.login();
+        },
+
+        async login() {
+            if (!this.authForm.username || !this.authForm.password) {
+                alert('Username and password are required.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: this.authForm.username,
+                        password: this.authForm.password
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Login failed.');
+                }
+
+                const data = await response.json();
+                // data.access, data.username, data.email
+
+                this.currentUsername = data.username || this.authForm.username;
+                this.saveToken(data.access);
+
+                // Save to localStorage first
+                localStorage.setItem('current_username', data.username || this.authForm.username);
+                localStorage.setItem('current_email', data.email || '');
+
+                // Then fill the form
+                this.form.author_name = data.username || this.authForm.username;
+                this.form.email = data.email || '';
+
+                this.authForm.username = '';
+                this.authForm.password = '';
+                this.showAuthModal = false;
+            } catch (error) {
+                alert(error.message || 'Login failed.');
+            }
+        },
+
+        async register() {
+    if (!this.authForm.username || !this.authForm.password) {
+        alert('Username and password are required.');
+        return;
+    }
+
+    if (!this.authForm.email) {
+        alert('Email is required.');
+        return;
+    }
+
+    if (this.authForm.password !== this.authForm.passwordConfirm) {
+        alert('Passwords do not match.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/auth/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: this.authForm.username,
+                email: this.authForm.email,
+                password: this.authForm.password
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || 'Registration failed.');
+        }
+
+        // Auto-login after registration
+        const loginResponse = await fetch('/api/auth/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: this.authForm.username,
+                password: this.authForm.password
+            })
+        });
+
+        if (!loginResponse.ok) {
+            throw new Error('Registration succeeded, but login failed.');
+        }
+
+        const loginData = await loginResponse.json();
+        this.currentUsername = this.authForm.username;
+        this.saveToken(loginData.access);
+
+        // Save to localStorage first
+        localStorage.setItem('current_username', this.authForm.username);
+        localStorage.setItem('current_email', this.authForm.email || '');
+
+        // Then fill the form
+        this.form.author_name = this.authForm.username;
+        this.form.email = this.authForm.email || '';
+
+        this.authForm.username = '';
+        this.authForm.email = '';
+        this.authForm.password = '';
+        this.authForm.passwordConfirm = '';
+        this.showAuthModal = false;
+    } catch (error) {
+        alert(error.message || 'Registration failed.');
+    }
+},
+
+            logout() {
+                this.clearToken();
+                this.form.author_name = '';
+                this.form.email = '';
+            },
+
+        // ---------- Existing comment methods ----------
+
         insertTag(tag) {
             const textarea = document.getElementById('id_text');
 
@@ -243,7 +463,29 @@ createApp({
             return errors.length === 0;
         },
 
+        clearAttachment() {
+            this.form.attachment = null;
+
+            const fileInput = document.getElementById('id_attachment');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        },
+
         handleSubmit(event) {
+            if (!this.isLoggedIn && this.form.attachment) {
+                alert('Please log in or register to upload images.');
+                this.form.attachment = null;
+
+                const fileInput = document.getElementById('id_attachment');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                event.preventDefault();
+                return;
+            }
+
             if (!this.validateForm()) {
                 event.preventDefault();
             }

@@ -7,155 +7,310 @@
     <title>Comments</title>
     <link rel="stylesheet" href="{% static 'comments/styles.css' %}">
     <link
-    rel="stylesheet"
-    href="{% static 'comments/lightbox/css/lightbox.css' %}"
->
+        rel="stylesheet"
+        href="{% static 'comments/lightbox/css/lightbox.css' %}"
+    >
 </head>
 <body>
-    <main>
-        <h1>Comments</h1>
+    <div id="vue-app" v-cloak>
+        <main>
+            <header class="page-header">
+                <h1>Comments</h1>
 
-        <section class="comment-form" id="vue-app">
-            {% if parent_comment %}
-                <h2>Reply to {{ parent_comment.author_name }}</h2>
-                <p>
-                    <a href="{% url 'comments:comment_list' %}">Cancel reply</a>
-                </p>
-            {% else %}
-                <h2>Leave a comment</h2>
-            {% endif %}
+                <div class="auth-panel">
+                    <template v-if="!isLoggedIn">
+                        <button
+                            type="button"
+                            class="auth-link"
+                            @click="openLoginModal"
+                        >
+                            Log in
+                        </button>
+                    </template>
 
-            <form id="comment-form" method="post" enctype="multipart/form-data" novalidate @submit="handleSubmit">
-                {% csrf_token %}
+                    <template v-else>
+                        <span class="auth-username">
+                            <span v-text="currentUsername"></span>
+                            <span class="auth-username-separator">·</span>
+                            <button
+                                type="button"
+                                class="auth-link"
+                                @click="logout"
+                            >
+                                Log out
+                            </button>
+                        </span>
+                    </template>
+                </div>
+            </header>
 
-                <div
-                    id="client-form-errors"
-                    class="form-errors"
-                    role="alert"
-                    aria-live="polite"
-                    v-if="errors && errors.length"
+            <section class="comment-form">
+                {% if parent_comment %}
+                    <h2>Reply to {{ parent_comment.author_name }}</h2>
+                    <p>
+                        <a href="{% url 'comments:comment_list' %}">Cancel reply</a>
+                    </p>
+                {% else %}
+                    <h2>Leave a comment</h2>
+                {% endif %}
+
+                <form
+                    id="comment-form"
+                    method="post"
+                    enctype="multipart/form-data"
+                    novalidate
+                    @submit="handleSubmit"
                 >
-                    <strong>Validation errors:</strong>
-                    <ul>
-                        <li v-for="(error, i) in errors" :key="i" v-text="error"></li>
-                    </ul>
-                </div>
+                    {% csrf_token %}
 
-                <div class="form-field">
-                    <label for="id_author_name">Author name</label>
-                    <input type="text" name="author_name" id="id_author_name" v-model="form.author_name">
-                </div>
-
-                <div class="form-field">
-                    <label for="id_email">Email</label>
-                    <input type="email" name="email" id="id_email" v-model="form.email">
-                </div>
-
-                <div class="form-field">
-                    <label for="id_home_page">Home page</label>
-                    <input type="url" name="home_page" id="id_home_page" v-model="form.home_page">
-                </div>
-
-                <div class="form-field">
-                    <label for="id_text">Text</label>
-
-                    <div class="html-toolbar" role="toolbar" aria-label="HTML formatting">
-                        <button type="button" @click="insertTag('i')">[i]</button>
-                        <button type="button" @click="insertTag('strong')">[strong]</button>
-                        <button type="button" @click="insertTag('code')">[code]</button>
-                        <button type="button" @click="insertTag('a')">[a]</button>
+                    <div
+                        id="client-form-errors"
+                        class="form-errors"
+                        role="alert"
+                        aria-live="polite"
+                        v-if="errors && errors.length"
+                    >
+                        <strong>Validation errors:</strong>
+                        <ul>
+                            <li
+                                v-for="(error, i) in errors"
+                                :key="i"
+                                v-text="error"
+                            ></li>
+                        </ul>
                     </div>
 
-                    <textarea
-                        name="text"
-                        id="id_text"
-                        v-model="form.text"
-                        @input="validateForm"
-                    ></textarea>
-                </div>
+                    <div class="form-field">
+                        <label for="id_author_name">Author name</label>
+                        <input
+                            type="text"
+                            name="author_name"
+                            id="id_author_name"
+                            v-model="form.author_name"
+                        >
+                    </div>
 
-                <div class="form-field">
-                    <label for="id_attachment">Attachment</label>
-                    <input
-                        type="file"
-                        name="attachment"
-                        id="id_attachment"
-                        @change="handleAttachmentChange"
-                    >
-                </div>
+                    <div class="form-field">
+                        <label for="id_email">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            id="id_email"
+                            v-model="form.email"
+                        >
+                    </div>
 
-                <div class="form-field">
-                    <label for="id_captcha">CAPTCHA</label>
-                    <img src="{% url 'comments:captcha_image' %}" alt="CAPTCHA code">
-                    <input type="text" name="captcha" id="id_captcha" v-model="form.captcha">
-                </div>
+                    <div class="form-field">
+                        <label for="id_home_page">Home page</label>
+                        <input
+                            type="url"
+                            name="home_page"
+                            id="id_home_page"
+                            v-model="form.home_page"
+                        >
+                    </div>
 
-                <button type="submit">Post comment</button>
-                <button type="button" @click="showPreview">Preview</button>
-            </form>
+                    <div class="form-field">
+                        <label for="id_text">Text</label>
 
-            <div id="comment-preview" class="comment-preview" v-if="showPreviewContainer" v-html="previewHtml"></div>
-        </section>
+                        <div
+                            class="html-toolbar"
+                            role="toolbar"
+                            aria-label="HTML formatting"
+                        >
+                            <button type="button" @click="insertTag('i')">[i]</button>
+                            <button type="button" @click="insertTag('strong')">[strong]</button>
+                            <button type="button" @click="insertTag('code')">[code]</button>
+                            <button type="button" @click="insertTag('a')">[a]</button>
+                        </div>
 
-        <section class="comments-list">
-            <h2>All comments</h2>
+                        <textarea
+                            name="text"
+                            id="id_text"
+                            v-model="form.text"
+                            @input="validateForm"
+                        ></textarea>
+                    </div>
 
-            <nav class="comment-sorting" aria-label="Comment sorting">
-                <span>Sort by:</span>
+                    <div class="form-field">
+                        <label for="id_attachment">Attachment</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input
+                                type="file"
+                                name="attachment"
+                                id="id_attachment"
+                                @change="handleAttachmentChange"
+                            >
+                            <button
+                                type="button"
+                                v-if="form.attachment"
+                                @click="clearAttachment"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
 
-                <a href="{% url 'comments:comment_list' %}?sort=author_name&direction=asc">
-                    User Name ↑
-                </a>
+                    <div class="form-field">
+                        <label for="id_captcha">CAPTCHA</label>
+                        <img
+                            src="{% url 'comments:captcha_image' %}"
+                            alt="CAPTCHA code"
+                        >
+                        <input
+                            type="text"
+                            name="captcha"
+                            id="id_captcha"
+                            v-model="form.captcha"
+                        >
+                    </div>
 
-                <a href="{% url 'comments:comment_list' %}?sort=author_name&direction=desc">
-                    User Name ↓
-                </a>
+                    <button type="submit">Post comment</button>
+                    <button type="button" @click="showPreview">Preview</button>
+                </form>
 
-                <a href="{% url 'comments:comment_list' %}?sort=email&direction=asc">
-                    E-mail ↑
-                </a>
+                <div
+                    id="comment-preview"
+                    class="comment-preview"
+                    v-if="showPreviewContainer"
+                    v-html="previewHtml"
+                ></div>
+            </section>
 
-                <a href="{% url 'comments:comment_list' %}?sort=email&direction=desc">
-                    E-mail ↓
-                </a>
+            <section class="comments-list">
+                <h2>All comments</h2>
 
-                <a href="{% url 'comments:comment_list' %}?sort=created_at&direction=desc">
-                    Newest
-                </a>
+                <nav class="comment-sorting" aria-label="Comment sorting">
+                    <span>Sort by:</span>
 
-                <a href="{% url 'comments:comment_list' %}?sort=created_at&direction=asc">
-                    Oldest
-                </a>
-            </nav>
+                    <a href="{% url 'comments:comment_list' %}?sort=author_name&direction=asc">
+                        User Name ↑
+                    </a>
 
+                    <a href="{% url 'comments:comment_list' %}?sort=author_name&direction=desc">
+                        User Name ↓
+                    </a>
 
-            {% for comment in comments %}
-                {% include "comments/_comment.html" with comment=comment %}
-            {% empty %}
-                <p>No comments yet.</p>
-            {% endfor %}
+                    <a href="{% url 'comments:comment_list' %}?sort=email&direction=asc">
+                        E-mail ↑
+                    </a>
 
-            {% if comments.paginator.num_pages > 1 %}
-                <nav class="pagination" aria-label="Comments pagination">
-                    {% if comments.has_previous %}
-                        <a href="{% url 'comments:comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.previous_page_number }}">
-                            Previous
-                        </a>
-                    {% endif %}
+                    <a href="{% url 'comments:comment_list' %}?sort=email&direction=desc">
+                        E-mail ↓
+                    </a>
 
-                    <span>
-                        Page {{ comments.number }} of {{ comments.paginator.num_pages }}
-                    </span>
+                    <a href="{% url 'comments:comment_list' %}?sort=created_at&direction=desc">
+                        Newest
+                    </a>
 
-                    {% if comments.has_next %}
-                        <a href="{% url 'comments:comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.next_page_number }}">
-                            Next
-                        </a>
-                    {% endif %}
+                    <a href="{% url 'comments:comment_list' %}?sort=created_at&direction=asc">
+                        Oldest
+                    </a>
                 </nav>
-            {% endif %}
-        </section>
-    </main>
+
+                {% for comment in comments %}
+                    {% include "comments/_comment.html" with comment=comment %}
+                {% empty %}
+                    <p>No comments yet.</p>
+                {% endfor %}
+
+                {% if comments.paginator.num_pages > 1 %}
+                    <nav class="pagination" aria-label="Comments pagination">
+                        {% if comments.has_previous %}
+                            <a href="{% url 'comments:comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.previous_page_number }}">
+                                Previous
+                            </a>
+                        {% endif %}
+
+                        <span>
+                            Page {{ comments.number }} of {{ comments.paginator.num_pages }}
+                        </span>
+
+                        {% if comments.has_next %}
+                            <a href="{% url 'comments:comment_list' %}?sort={{ sort }}&direction={{ direction }}&page={{ comments.next_page_number }}">
+                                Next
+                            </a>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            </section>
+        </main>
+                <!-- Login / Register modal -->
+        <div
+            v-if="showAuthModal"
+            class="auth-modal-overlay"
+            @click.self="closeAuthModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
+        >
+            <div class="auth-modal">
+                <h2 id="auth-modal-title" v-text="isLoginMode ? 'Log in' : 'Register'"></h2>
+
+                <form @submit.prevent="handleAuthSubmit">
+                    <div class="form-field">
+                        <label for="auth-username">Username</label>
+                        <input
+                            type="text"
+                            id="auth-username"
+                            v-model="authForm.username"
+                            required
+                        >
+                    </div>
+
+                    <div v-if="!isLoginMode" class="form-field">
+                        <label for="auth-email">Email</label>
+                        <input
+                            type="email"
+                            id="auth-email"
+                            v-model="authForm.email"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label for="auth-password">Password</label>
+                        <input
+                            type="password"
+                            id="auth-password"
+                            v-model="authForm.password"
+                            required
+                        >
+                    </div>
+
+                    <div v-if="!isLoginMode" class="form-field">
+                        <label for="auth-password-confirm">Confirm password</label>
+                        <input
+                            type="password"
+                            id="auth-password-confirm"
+                            v-model="authForm.passwordConfirm"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" v-text="isLoginMode ? 'Log in' : 'Register'"></button>
+                        <button type="button" @click="closeAuthModal">Cancel</button>
+                    </div>
+                </form>
+
+                <p class="auth-switch">
+                    <template v-if="isLoginMode">
+                        Don’t have an account?
+                        <button type="button" class="auth-link" @click="switchToRegister">
+                            Register
+                        </button>
+                    </template>
+                    <template v-else>
+                        Already have an account?
+                        <button type="button" class="auth-link" @click="switchToLogin">
+                            Log in
+                        </button>
+                    </template>
+                </p>
+            </div>
+        </div>
+    </div>
 
     <script src="{% static 'comments/lightbox/js/lightbox-plus-jquery.js' %}"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>

@@ -31,6 +31,7 @@
         <p>{{ comment.text|safe }}</p>
 
         {% if comment.attachment %}
+            <div v-if="isLoggedIn">
             {% if comment.attachment.name|lower|slice:"-4:" == ".txt" %}
                 <p>
                     <a href="{{ comment.attachment.url }}" target="_blank">
@@ -51,7 +52,9 @@
                         >
                     </a>
                 </p>
+
             {% endif %}
+            </div>
         {% endif %}
 
         <p>

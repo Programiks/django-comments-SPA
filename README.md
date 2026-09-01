@@ -58,6 +58,14 @@ The project is being developed step by step from a server-rendered Django interf
 - Client-side insertion of allowed HTML tags via toolbar
 - AJAX comment preview with server-side HTML sanitization
 - Preservation of line breaks in newly created comments
+- JWT-based authentication(in phase2):
+  - User registration and login via REST API (`/api/auth/register/`, `/api/auth/login/`);
+  - JWT access/refresh tokens using djangorestframework-simplejwt;
+  - Token stored in localStorage and sent with requests;
+  - UI with login/register modal, automatic form prefill for logged-in users;
+  - Restricted image attachments:
+    - non-authenticated users cannot upload files;
+    - non-authenticated users do not see image attachments in comments.
 
 ## Phase 1: Backend-first implementation
 
@@ -100,7 +108,6 @@ The following features are planned but not implemented yet:
 - Queue
 - Cache
 - Events
-- JWT
 - Full Dockerized application deployment
 
 ## Local setup
