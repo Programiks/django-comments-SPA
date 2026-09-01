@@ -71,6 +71,10 @@ The project is being developed step by step from a server-rendered Django interf
   - Django cache framework (`django.core.cache`) with `LocMemCache` backend;
   - Server-side caching of comment list queries based on page, sort field, and direction;
   - Cache invalidation on new comment creation via `cache.clear()`.
+- Events for comment creation (in phase 2):
+  - Django signals (`post_save` on `Comment` model);
+  - `comment_created` event logged on every new comment;
+  - Decoupled event handling ready for future extensions (emails, queues, analytics).
 
 ## Phase 1: Backend-first implementation
 
@@ -111,7 +115,6 @@ The following features are planned but not implemented yet:
 
 - WebSocket updates
 - Queue
-- Events
 - Full Dockerized application deployment
 
 ## Local setup
