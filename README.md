@@ -67,19 +67,24 @@ The project is being developed step by step from a server-rendered Django interf
   - Restricted image attachments:
     - non-authenticated users cannot upload files;
     - non-authenticated users do not see image attachments in comments.
-- Cache for comment list (in phase 2):
+- **Cache for comment list (in phase 2):**
   - Django cache framework (`django.core.cache`) with `LocMemCache` backend;
   - Server-side caching of comment list queries based on page, sort field, and direction;
   - Cache invalidation on new comment creation via `cache.clear()`.
-- Events for comment creation (in phase 2):
+- **Events for comment creation (in phase 2):**
   - Django signals (`post_save` on `Comment` model);
   - `comment_created` event logged on every new comment;
   - Decoupled event handling ready for future extensions (emails, queues, analytics).
-- Comment queue (in phase 2):
+- **Comment queue (in phase 2):**
   - New comments are not published immediately.
   - They are saved to the database with `status = "pending"` and become visible only after the queue is processed.
   - Queue processing happens automatically after each request via middleware.
   - This setup can be easily replaced with a background worker (e.g. Celery) without changing the core logic.
+- **Real-time comment updates via WebSocket (in phase 2):**
+  - Django Channels (`channels`) for WebSocket support;
+  - `comment_created` event broadcast to all connected clients when a new comment is published;
+  - Client-side JavaScript handles incoming events and updates the comment list without page reload;
+  - In-memory channel layer (`InMemoryChannelLayer`) for development; can be replaced with Redis for production.
 
 ## Phase 1: Backend-first implementation
 
@@ -114,12 +119,6 @@ Implemented Vue features:
 - HTML tag toolbar: `[i]`, `[strong]`, `[code]`, `[a]`.
 - Removal of the legacy JavaScript implementation in favor of Vue.
 
-## Current limitations
-
-The following features are planned but not implemented yet:
-
-- WebSocket updates
-- Full Dockerized application deployment
 
 ## Local setup
 
@@ -190,3 +189,20 @@ localhost:5433
 - Comment HTML is restricted to `a`, `code`, `i`, and `strong`.
 - Only `href` and `title` attributes are allowed for `a` tags.
 - Link protocols are restricted to `http`, `https`, and `mailto`.
+
+## Running Tests
+
+To run the comment system tests:
+
+```bash
+python manage.py test comments.tests
+```
+
+### Test Coverage
+
+- **CommentCreationTest**: Basic comment creation with valid data
+- **CommentEmailValidationTest**: Email validation (required, format)
+- **CommentTextLengthValidationTest**: Text length constraints (2–2000 characters)
+- **CommentCaptchaValidationTest**: CAPTCHA validation (placeholder)
+- **CommentHtmlValidationTest**: HTML sanitization and XSS prevention
+- **NestedCommentsTest**: Unlimited nested comment replies

@@ -28,15 +28,50 @@ createApp({
             },
             errors: [],
             previewHtml: '',
-            showPreviewContainer: false
+            showPreviewContainer: false,
+            socket: null,
+            isSubmittingComment: false,
+            captchaToken: `${Date.now()}-${Math.random().toString(16).slice(2)}`
         };
+    },
+
+    computed: {
+        canSubmit() {
+            return this.errors.length === 0
+                && this.form.author_name.trim()
+                && this.form.email.trim()
+                && this.form.text.trim().length >= 2;
+        },
+
+        captchaImageUrl() {
+            return `/comments/captcha/?token=${encodeURIComponent(this.captchaToken)}`;
+        }
     },
 
     created() {
         this.loadAuthFromStorage();
+        this.connectWebSocket();
     },
 
     methods: {
+        connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+
+            this.socket = new WebSocket(
+                `${protocol}://${window.location.host}/ws/comments/`
+            );
+
+            this.socket.onopen = () => {};
+
+            this.socket.onerror = () => {};
+
+            this.socket.onmessage = (event) => {
+                if (event.data === 'new_comment') {
+                    window.location.reload();
+                }
+            };
+        },
+
         // ---------- Auth methods ----------
 
         loadAuthFromStorage() {
@@ -104,12 +139,10 @@ createApp({
 
         async handleAuthSubmit() {
             if (!this.isLoginMode) {
-                // Registration
                 await this.register();
                 return;
             }
 
-            // Login
             await this.login();
         },
 
@@ -137,16 +170,13 @@ createApp({
                 }
 
                 const data = await response.json();
-                // data.access, data.username, data.email
 
                 this.currentUsername = data.username || this.authForm.username;
                 this.saveToken(data.access);
 
-                // Save to localStorage first
                 localStorage.setItem('current_username', data.username || this.authForm.username);
                 localStorage.setItem('current_email', data.email || '');
 
-                // Then fill the form
                 this.form.author_name = data.username || this.authForm.username;
                 this.form.email = data.email || '';
 
@@ -159,84 +189,81 @@ createApp({
         },
 
         async register() {
-    if (!this.authForm.username || !this.authForm.password) {
-        alert('Username and password are required.');
-        return;
-    }
+            if (!this.authForm.username || !this.authForm.password) {
+                alert('Username and password are required.');
+                return;
+            }
 
-    if (!this.authForm.email) {
-        alert('Email is required.');
-        return;
-    }
+            if (!this.authForm.email) {
+                alert('Email is required.');
+                return;
+            }
 
-    if (this.authForm.password !== this.authForm.passwordConfirm) {
-        alert('Passwords do not match.');
-        return;
-    }
+            if (this.authForm.password !== this.authForm.passwordConfirm) {
+                alert('Passwords do not match.');
+                return;
+            }
 
-    try {
-        const response = await fetch('/api/auth/register/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: this.authForm.username,
-                email: this.authForm.email,
-                password: this.authForm.password
-            })
-        });
+            try {
+                const response = await fetch('/api/auth/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: this.authForm.username,
+                        email: this.authForm.email,
+                        password: this.authForm.password
+                    })
+                });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || 'Registration failed.');
-        }
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Registration failed.');
+                }
 
-        // Auto-login after registration
-        const loginResponse = await fetch('/api/auth/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: this.authForm.username,
-                password: this.authForm.password
-            })
-        });
+                const loginResponse = await fetch('/api/auth/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: this.authForm.username,
+                        password: this.authForm.password
+                    })
+                });
 
-        if (!loginResponse.ok) {
-            throw new Error('Registration succeeded, but login failed.');
-        }
+                if (!loginResponse.ok) {
+                    throw new Error('Registration succeeded, but login failed.');
+                }
 
-        const loginData = await loginResponse.json();
-        this.currentUsername = this.authForm.username;
-        this.saveToken(loginData.access);
+                const loginData = await loginResponse.json();
+                this.currentUsername = this.authForm.username;
+                this.saveToken(loginData.access);
 
-        // Save to localStorage first
-        localStorage.setItem('current_username', this.authForm.username);
-        localStorage.setItem('current_email', this.authForm.email || '');
+                localStorage.setItem('current_username', this.authForm.username);
+                localStorage.setItem('current_email', this.authForm.email || '');
 
-        // Then fill the form
-        this.form.author_name = this.authForm.username;
-        this.form.email = this.authForm.email || '';
+                this.form.author_name = this.authForm.username;
+                this.form.email = this.authForm.email || '';
 
-        this.authForm.username = '';
-        this.authForm.email = '';
-        this.authForm.password = '';
-        this.authForm.passwordConfirm = '';
-        this.showAuthModal = false;
-    } catch (error) {
-        alert(error.message || 'Registration failed.');
-    }
-},
+                this.authForm.username = '';
+                this.authForm.email = '';
+                this.authForm.password = '';
+                this.authForm.passwordConfirm = '';
+                this.showAuthModal = false;
+            } catch (error) {
+                alert(error.message || 'Registration failed.');
+            }
+        },
 
-            logout() {
-                this.clearToken();
-                this.form.author_name = '';
-                this.form.email = '';
-            },
+        logout() {
+            this.clearToken();
+            this.form.author_name = '';
+            this.form.email = '';
+        },
 
-        // ---------- Existing comment methods ----------
+        // ---------- Comment methods ----------
 
         insertTag(tag) {
             const textarea = document.getElementById('id_text');
@@ -472,7 +499,12 @@ createApp({
             }
         },
 
-        handleSubmit(event) {
+        async handleSubmit(event) {
+            event.preventDefault();
+
+            this.isSubmittingComment = true;
+            this.errors = [];
+
             if (!this.isLoggedIn && this.form.attachment) {
                 alert('Please log in or register to upload images.');
                 this.form.attachment = null;
@@ -482,12 +514,67 @@ createApp({
                     fileInput.value = '';
                 }
 
-                event.preventDefault();
+                this.isSubmittingComment = false;
                 return;
             }
 
             if (!this.validateForm()) {
-                event.preventDefault();
+                this.isSubmittingComment = false;
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('author_name', this.form.author_name);
+            formData.append('email', this.form.email);
+            formData.append('home_page', this.form.home_page || '');
+            formData.append('text', this.form.text);
+            formData.append('captcha', this.form.captcha);
+            formData.append('captcha_token', this.captchaToken);
+
+            if (this.form.attachment) {
+                formData.append('attachment', this.form.attachment);
+            }
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken || '',
+                    },
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    this.errors = errorData.errors || ['Could not submit comment. Please try again.'];
+                    throw new Error('Submit failed.');
+                }
+
+                this.form.author_name = '';
+                this.form.email = '';
+                this.form.home_page = '';
+                this.form.text = '';
+                this.form.captcha = '';
+                this.form.attachment = null;
+
+                const fileInput = document.getElementById('id_attachment');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                this.errors = [];
+                this.showPreviewContainer = false;
+                this.previewHtml = '';
+
+                // Reload to show the new comment; other tabs will reload via WebSocket
+                window.location.reload();
+            } catch (error) {
+                this.errors = ['Could not submit comment. Please try again.'];
+            } finally {
+                this.isSubmittingComment = false;
             }
         },
 

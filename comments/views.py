@@ -1,3 +1,5 @@
+import uuid
+
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
@@ -5,6 +7,8 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from .captcha import generate_captcha_code, generate_captcha_image
 from .forms import CommentForm
@@ -32,9 +36,33 @@ def comment_list(request):
                 resize_attachment_image(comment.attachment)
 
             comment.save()
+
             # Clear cache after creating a comment
             cache.clear()
+
+            # Send WebSocket notification
+            channel_layer = get_channel_layer()
+
+            async_to_sync(channel_layer.group_send)(
+                "comments",
+                {
+                    "type": "comment.created",
+                    "message": "new_comment",
+                },
+            )
+
+            # For AJAX requests, return JSON instead of redirect
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'ok'})
+
             return redirect("comments:comment_list")
+
+        # Form is invalid
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'errors': form.errors}, status=400)
+
+        # For non-AJAX, re-render the page with errors
+        # (existing code below will handle this)
     else:
         form = CommentForm(request=request)
 
@@ -119,9 +147,14 @@ def comment_preview(request):
 
 
 def captcha_image(request):
-    """Generate a CAPTCHA image and store its code in the session."""
+    """Generate a CAPTCHA image and store its code under a form token."""
+    token = request.GET.get("token") or uuid.uuid4().hex
     code = generate_captcha_code()
-    request.session["captcha_code"] = code
+
+    request.session[f"captcha_{token}"] = code
+    request.session.modified = True
 
     image = generate_captcha_image(code)
-    return HttpResponse(image, content_type="image/png")
+    response = HttpResponse(image, content_type="image/png")
+    response["X-Captcha-Token"] = token
+    return response

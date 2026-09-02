@@ -63,6 +63,13 @@
                 >
                     {% csrf_token %}
 
+                    <input
+                        type="hidden"
+                        name="captcha_token"
+                        id="captcha-token"
+                        :value="captchaToken"
+                    >
+
                     <div
                         id="client-form-errors"
                         class="form-errors"
@@ -87,6 +94,7 @@
                             name="author_name"
                             id="id_author_name"
                             v-model="form.author_name"
+                            @input="validateForm"
                         >
                     </div>
 
@@ -97,6 +105,7 @@
                             name="email"
                             id="id_email"
                             v-model="form.email"
+                            @input="validateForm"
                         >
                     </div>
 
@@ -107,6 +116,7 @@
                             name="home_page"
                             id="id_home_page"
                             v-model="form.home_page"
+                            @input="validateForm"
                         >
                     </div>
 
@@ -153,19 +163,30 @@
 
                     <div class="form-field">
                         <label for="id_captcha">CAPTCHA</label>
+
                         <img
-                            src="{% url 'comments:captcha_image' %}"
+                            id="captcha-image"
+                            :src="captchaImageUrl"
                             alt="CAPTCHA code"
                         >
+
                         <input
                             type="text"
                             name="captcha"
                             id="id_captcha"
                             v-model="form.captcha"
+                            @input="validateForm"
                         >
                     </div>
 
-                    <button type="submit">Post comment</button>
+                    <button type="submit" :disabled="isSubmittingComment">
+                        <span v-if="!isSubmittingComment">Post comment</span>
+                        <span v-else>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Posting...
+                        </span>
+                    </button>
+
                     <button type="button" @click="showPreview">Preview</button>
                 </form>
 
@@ -235,7 +256,8 @@
                 {% endif %}
             </section>
         </main>
-                <!-- Login / Register modal -->
+
+        <!-- Login / Register modal -->
         <div
             v-if="showAuthModal"
             class="auth-modal-overlay"

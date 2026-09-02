@@ -27,7 +27,10 @@ class CommentForm(forms.ModelForm):
         captcha = self.cleaned_data["captcha"].upper()
 
         expected_code = (
-            self.request.session.get("captcha_code")
+            self.request.session.get(
+                f"captcha_{self.data.get('captcha_token', '')}"
+            )
+
             if self.request
             else None
         )

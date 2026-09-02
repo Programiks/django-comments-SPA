@@ -1,12 +1,15 @@
 from django.core.validators import RegexValidator
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator, MaxLengthValidator
 
 from .validators import validate_attachment, validate_comment_html
 
 
 username_validator = RegexValidator(
-    regex=r"^[A-Za-z0-9]+$",
-    message="User Name may contain only Latin letters and digits.",
+    regex=r"^[A-Za-z0-9_]+$",
+    message="User Name may contain only Latin letters, digits, and"
+            "underscore.",
 )
 
 
@@ -26,7 +29,10 @@ class Comment(models.Model):
     email = models.EmailField()
     home_page = models.URLField(blank=True)
     text = models.TextField(
-        validators=[validate_comment_html],
+        validators=[validate_comment_html,
+        MinLengthValidator(2),
+        MaxLengthValidator(2000),
+        ],
     )
 
     parent = models.ForeignKey(
@@ -67,3 +73,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.author_name}: {self.text[:50]}"
+
+
+    def clean(self):
+        if '<script' in self.text.lower():
+            raise ValidationError({'text': 'Script tags are not allowed.'})
