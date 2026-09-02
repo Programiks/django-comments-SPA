@@ -7,7 +7,7 @@ The project is being developed step by step from a server-rendered Django interf
 ## Current stack
 
 - Python 3.12
-- Django 6.1
+- Django 6.0.7
 - Django ORM
 - PostgreSQL 17
 - Docker Compose
@@ -122,6 +122,13 @@ Implemented Vue features:
 
 ## Local setup
 
+This section describes local development with Django running 
+from a Python virtual environment and PostgreSQL running in Docker.
+
+For running the complete application in Docker, including 
+Django, Vue, PostgreSQL, and WebSocket support, 
+see the [Docker Setup](#-docker-setup) section below.
+
 1. Create and activate a virtual environment.
 
 2. Install dependencies:
@@ -139,7 +146,7 @@ Implemented Vue features:
 4. Start PostgreSQL:
 
    ```powershell
-   docker compose up -d
+   docker compose up -d db
    ```
 
 5. Apply database migrations:
@@ -207,64 +214,148 @@ python manage.py test comments.tests
 - **CommentHtmlValidationTest**: HTML sanitization and XSS prevention
 - **NestedCommentsTest**: Unlimited nested comment replies
 
-## 🐳 Docker Deployment
+## 🐳 Docker Setup
 
-The project can be deployed using Docker Compose with a single command.
+Docker allows you to run the complete application with one command:
+
+- Django application
+- Vue 3 client
+- PostgreSQL database
+- WebSocket support
 
 ### Prerequisites
 
-- Docker installed
-- Docker Compose installed
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+2. Start Docker Desktop and wait until it is running.
+3. Verify that Docker and Docker Compose are available:
 
-### Quick Start
+```bash
+docker --version
+docker compose version
+```
+
+### First Run
 
 1. Clone the repository:
 
 ```bash
-git clone <your-repo-url>
-cd <project-folder>
+git clone git@github.com:Programiks/django-comments-SPA.git
+cd django-comments-SPA
 ```
 
-2. Create `.env` file from template:
+2. Create a local environment file from the example:
 
 ```bash
 cp .env.example .env
 ```
 
-3. Build and start containers:
+For Windows PowerShell, use:
 
-```bash
-docker-compose up --build
+```powershell
+Copy-Item .env.example .env
 ```
 
-4. Open the application:
+3. Open `.env` and update values if necessary. The default values are suitable for local development.
+
+4. Build images and start the application:
+
+```bash
+docker compose up --build
+```
+
+The first build may take several minutes because Docker needs to download images and install Python dependencies.
+
+5. Wait until the logs contain:
+
+```text
+Starting ASGI/Daphne development server at http://0.0.0.0:8000/
+```
+
+6. Open the application in your browser:
 
 ```text
 http://localhost:8000/comments/
 ```
 
-### Docker Configuration
+### Run in Background
 
-- **PostgreSQL 15**: Database service on port 5433
-- **Django**: Web application on port 8000
-- **Volumes**: Database data persists in `postgres_data` volume
-
-### Stop Containers
+Use detached mode to keep the terminal available:
 
 ```bash
-docker-compose down
+docker compose up -d --build
 ```
 
-### Rebuild After Changes
+Check container status:
 
 ```bash
-docker-compose up --build
+docker compose ps
 ```
 
----
+View logs for all services:
 
-## 📊 Database Schema
+```bash
+docker compose logs -f
+```
 
-See `database_schema.sql` file for MySQL Workbench compatible schema.
+View Django application logs only:
 
----
+```bash
+docker compose logs -f web
+```
+
+### Stop the Application
+
+Stop containers without removing PostgreSQL data:
+
+```bash
+docker compose down
+```
+
+### Database Data
+
+PostgreSQL data is stored in the Docker named volume `postgres_data`.
+
+Running the following command stops and removes containers but keeps the database data:
+
+```bash
+docker compose down
+```
+
+Do not run this command unless you intentionally want to permanently remove the local database:
+
+```bash
+docker compose down -v
+```
+
+The `-v` option removes the `postgres_data` volume and all PostgreSQL data stored inside it.
+
+### After Code Changes
+
+Changes to Python, HTML, CSS, and JavaScript files are usually detected automatically by Django during development.
+
+If you change `Dockerfile` or `requirements.txt`, rebuild the image:
+
+```bash
+docker compose up -d --build
+```
+
+### Troubleshooting
+
+Check whether containers are running:
+
+```bash
+docker compose ps
+```
+
+Show the last 100 log lines:
+
+```bash
+docker compose logs --tail=100
+```
+
+Restart containers without deleting database data:
+
+```bash
+docker compose down
+docker compose up -d --build
+```

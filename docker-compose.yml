@@ -1,44 +1,39 @@
-# docker-compose.yml
-# Docker Compose configuration for Django comment system
-# Includes PostgreSQL database and Django web application
-
-version: '3.8'
-
 services:
-  # PostgreSQL database service
   db:
-    image: postgres:15
-    volumes:
-      # Persist database data between container restarts
-      - postgres_data:/var/lib/postgresql/data
+    image: postgres:17-alpine
+    container_name: comments_postgres
+    restart: unless-stopped
     environment:
-      # Database credentials from .env file (with defaults)
-      POSTGRES_DB: ${POSTGRES_DB:-comments_db}
-      POSTGRES_USER: ${POSTGRES_USER:-comments_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      # Expose PostgreSQL port for external access (optional)
-      - "${POSTGRES_PORT:-5433}:5432"
-    restart: always
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # Django web application service
   web:
     build: .
+    container_name: comments_web
     command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
     volumes:
-      # Mount current directory for live code updates
       - .:/app
     ports:
-      # Expose Django development server on port 8000
       - "8000:8000"
-    depends_on:
-      # Ensure database starts before web application
-      - db
     env_file:
-      # Load environment variables from .env file
       - .env
-    restart: always
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
 
-# Define named volumes for data persistence
 volumes:
   postgres_data:

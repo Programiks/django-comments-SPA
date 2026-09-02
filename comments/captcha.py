@@ -62,7 +62,7 @@ def generate_captcha_image(code):
     # Create white background image
     image = Image.new("RGB", (CAPTCHA_WIDTH, CAPTCHA_HEIGHT), "white")
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("arial.ttf", 24)
+    font = ImageFont.load_default(size=24)
 
     # Add random noise lines for bot protection
     for _ in range(12):
