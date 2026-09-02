@@ -206,3 +206,65 @@ python manage.py test comments.tests
 - **CommentCaptchaValidationTest**: CAPTCHA validation (placeholder)
 - **CommentHtmlValidationTest**: HTML sanitization and XSS prevention
 - **NestedCommentsTest**: Unlimited nested comment replies
+
+## 🐳 Docker Deployment
+
+The project can be deployed using Docker Compose with a single command.
+
+### Prerequisites
+
+- Docker installed
+- Docker Compose installed
+
+### Quick Start
+
+1. Clone the repository:
+
+```bash
+git clone <your-repo-url>
+cd <project-folder>
+```
+
+2. Create `.env` file from template:
+
+```bash
+cp .env.example .env
+```
+
+3. Build and start containers:
+
+```bash
+docker-compose up --build
+```
+
+4. Open the application:
+
+```text
+http://localhost:8000/comments/
+```
+
+### Docker Configuration
+
+- **PostgreSQL 15**: Database service on port 5433
+- **Django**: Web application on port 8000
+- **Volumes**: Database data persists in `postgres_data` volume
+
+### Stop Containers
+
+```bash
+docker-compose down
+```
+
+### Rebuild After Changes
+
+```bash
+docker-compose up --build
+```
+
+---
+
+## 📊 Database Schema
+
+See `database_schema.sql` file for MySQL Workbench compatible schema.
+
+---

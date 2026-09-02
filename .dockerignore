@@ -1,0 +1,49 @@
+# .dockerignore
+# Files and directories to exclude from Docker build context
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments (not needed in container)
+.venv/
+venv/
+env/
+
+# Environment files (sensitive data, use .env in container)
+.env
+.env.local
+.env.*.local
+
+# Git directory (not needed in container)
+.git/
+.gitignore
+
+# IDE configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local SQLite database (using PostgreSQL in production)
+db.sqlite3
+
+# Media files (uploaded by users, not part of codebase)
+media/
+
+# Collected static files (regenerated in container)
+staticfiles/
+
+# Documentation (not needed for runtime)
+*.md
+README.md
+
+# Development configuration files
+.flake8
+.isort.cfg
+
+# Operating system files
+.DS_Store
+Thumbs.db

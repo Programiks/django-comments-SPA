@@ -1,0 +1,44 @@
+# docker-compose.yml
+# Docker Compose configuration for Django comment system
+# Includes PostgreSQL database and Django web application
+
+version: '3.8'
+
+services:
+  # PostgreSQL database service
+  db:
+    image: postgres:15
+    volumes:
+      # Persist database data between container restarts
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      # Database credentials from .env file (with defaults)
+      POSTGRES_DB: ${POSTGRES_DB:-comments_db}
+      POSTGRES_USER: ${POSTGRES_USER:-comments_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123}
+    ports:
+      # Expose PostgreSQL port for external access (optional)
+      - "${POSTGRES_PORT:-5433}:5432"
+    restart: always
+
+  # Django web application service
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      # Mount current directory for live code updates
+      - .:/app
+    ports:
+      # Expose Django development server on port 8000
+      - "8000:8000"
+    depends_on:
+      # Ensure database starts before web application
+      - db
+    env_file:
+      # Load environment variables from .env file
+      - .env
+    restart: always
+
+# Define named volumes for data persistence
+volumes:
+  postgres_data:
