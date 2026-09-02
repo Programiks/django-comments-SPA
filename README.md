@@ -120,73 +120,6 @@ Implemented Vue features:
 - Removal of the legacy JavaScript implementation in favor of Vue.
 
 
-## Local setup
-
-This section describes local development with Django running 
-from a Python virtual environment and PostgreSQL running in Docker.
-
-For running the complete application in Docker, including 
-Django, Vue, PostgreSQL, and WebSocket support, 
-see the [Docker Setup](#-docker-setup) section below.
-
-1. Create and activate a virtual environment.
-
-2. Install dependencies:
-
-   ```powershell
-   python -m pip install -r requirements.txt
-   ```
-
-3. Create a local environment file from the template:
-
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-4. Start PostgreSQL:
-
-   ```powershell
-   docker compose up -d db
-   ```
-
-5. Apply database migrations:
-
-   ```powershell
-   python manage.py migrate
-   ```
-
-6. Run Django checks:
-
-   ```powershell
-   python manage.py check --database default
-   ```
-
-7. Start the development server:
-
-   ```powershell
-   python manage.py runserver
-   ```
-
-8. Open the application:
-
-   ```text
-   http://127.0.0.1:8000/comments/
-   ```
-
-## Configuration
-
-The project reads PostgreSQL settings from `.env`.
-
-Do not commit `.env`. Use `.env.example` as a configuration template.
-
-Uploaded attachments are stored locally in `attachments/` and are ignored by Git.
-
-For the current local Docker setup, PostgreSQL is available at:
-
-```text
-localhost:5433
-```
-
 ## Comment rules
 
 - `author_name` is required and may contain only Latin letters and digits.
@@ -236,42 +169,48 @@ docker compose version
 
 ### First Run
 
-1. Clone the repository:
+1. Choose a directory where you want to store the project, then clone the repository:
 
-```bash
-git clone git@github.com:Programiks/django-comments-SPA.git
-cd django-comments-SPA
-```
+    ```bash
+    git clone git@github.com:Programiks/django-comments-SPA.git
+    cd django-comments-SPA
+    ```
 
 2. Create a local environment file from the example:
 
-```bash
-cp .env.example .env
-```
+    ```bash
+    cp .env.example .env
+    ```
 
 For Windows PowerShell, use:
 
-```powershell
-Copy-Item .env.example .env
-```
+    ```powershell
+    Copy-Item .env.example .env
+    ```
 
-3. Open `.env` and update values if necessary. The default values are suitable for local development.
+Open `.env` and update values if necessary. The default values are suitable for local development.
 
 4. Build images and start the application:
 
-```bash
-docker compose up --build
-```
+    ```bash
+    docker compose up --build
+    ```
 
 The first build may take several minutes because Docker needs to download images and install Python dependencies.
 
 5. Wait until the logs contain:
 
-```text
-Starting ASGI/Daphne development server at http://0.0.0.0:8000/
-```
+    ```text
+    Starting ASGI/Daphne development server at http://0.0.0.0:8000/
+    ```
 
-6. Open the application in your browser:
+6. In a new terminal, from the project root, apply database migrations:
+
+   ```powershell
+   docker compose exec web python manage.py migrate
+   ```
+
+7. Open the application in your browser:
 
 ```text
 http://localhost:8000/comments/
