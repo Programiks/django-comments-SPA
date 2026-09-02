@@ -3,7 +3,8 @@ URL configuration for the comments API.
 """
 
 from django.urls import path
-from .views import RegisterView, LoginView, CommentCreateView
+
+from .views import CommentCreateView, LoginView, RegisterView
 
 urlpatterns = [
     path("auth/register/", RegisterView.as_view(), name="api-register"),

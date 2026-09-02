@@ -7,6 +7,15 @@
 body {
     margin: 0;
     padding: 32px;
+    /* Сучасний mesh gradient фон */
+    background:
+        radial-gradient(at 0% 0%, rgba(102, 126, 234, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(118, 75, 162, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(102, 126, 234, 0.08) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(118, 75, 162, 0.08) 0px, transparent 50%),
+        linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
 }
 
 main {
@@ -28,7 +37,9 @@ h1 {
     padding: 24px;
     border: 1px solid #dfe5ee;
     border-radius: 8px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .form-field {
@@ -72,6 +83,8 @@ button:hover {
     border: 1px solid #e1e6ee;
     border-radius: 6px;
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
 }
 
 .comment-header {

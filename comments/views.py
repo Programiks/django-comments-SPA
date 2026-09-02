@@ -1,14 +1,24 @@
+"""
+Django views for the comment system.
+
+This module handles:
+- Displaying and paginating comments
+- Creating new comments and replies
+- CAPTCHA image generation
+- Live comment preview (AJAX)
+- WebSocket notifications for real-time updates
+"""
+
 import uuid
 
-from django.shortcuts import get_object_or_404, redirect, render
-from django.core.paginator import Paginator
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.csrf import csrf_exempt
-from django.core.cache import cache
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.core.cache import cache
+from django.core.paginator import Paginator
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from .captcha import generate_captcha_code, generate_captcha_image
 from .forms import CommentForm
@@ -16,8 +26,35 @@ from .models import Comment
 from .services import resize_attachment_image
 from .validators import sanitize_comment_html
 
+
 def comment_list(request):
-    """Display comments and create top-level comments or replies."""
+    """
+    Display paginated comments and handle comment creation.
+
+    This view supports:
+    - GET: Display list of published top-level comments with sorting
+        and pagination
+    - POST: Create new top-level comments or replies to existing comments
+    - Caching: Server-side caching of comment queries for performance
+    - WebSocket: Real-time notification when new comments are created
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered comment list template or JSON response for AJAX.
+
+    Query Parameters:
+        parent: ID of parent comment for replies (optional)
+        sort: Sort field (author_name, email, created_at)
+        direction: Sort direction (asc, desc)
+        page: Page number for pagination
+
+    Notes:
+        - Cache is cleared after new comment creation
+        - Supports both AJAX and traditional form submission
+        - Attachments are resized if they exceed maximum dimensions
+    """
     parent_id = request.GET.get("parent")
     parent_comment = None
 
@@ -30,19 +67,20 @@ def comment_list(request):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.parent = parent_comment
+            # Convert line breaks to HTML <br> tags
             comment.text = comment.text.replace("\n", "<br>")
 
+            # Resize image attachment if present
             if comment.attachment:
                 resize_attachment_image(comment.attachment)
 
             comment.save()
 
-            # Clear cache after creating a comment
+            # Clear cache after creating a comment to ensure fresh data
             cache.clear()
 
-            # Send WebSocket notification
+            # Send WebSocket notification for real-time updates
             channel_layer = get_channel_layer()
-
             async_to_sync(channel_layer.group_send)(
                 "comments",
                 {
@@ -66,9 +104,11 @@ def comment_list(request):
     else:
         form = CommentForm(request=request)
 
+    # Get sorting parameters from query string
     sort = request.GET.get("sort", "created_at")
     direction = request.GET.get("direction", "desc")
 
+    # Whitelist of allowed sort fields to prevent SQL injection
     allowed_sort_fields = {
         "author_name": "author_name",
         "email": "email",
@@ -78,8 +118,9 @@ def comment_list(request):
     sort_field = allowed_sort_fields.get(sort, "created_at")
     ordering = sort_field if direction == "asc" else f"-{sort_field}"
 
-    # Build a unique cache key for this request
-    cache_key = f"comments_page_{request.GET.get('page', '1')}_{sort}_{direction}"
+    # Build a unique cache key for this request (page + sort + direction)
+    cache_key = (f"comments_page_{request.GET.get('page', '1')}"
+                 f"_{sort}_{direction}")
 
     # Try to get from cache
     cached_data = cache.get(cache_key)
@@ -111,15 +152,15 @@ def comment_list(request):
         Comment.objects
         .filter(parent__isnull=True, status=Comment.STATUS_PUBLISHED)
         .order_by(ordering)
-        .prefetch_related("replies")
+        .prefetch_related("replies")  # Optimize nested reply queries
     )
 
     paginator = Paginator(comments_qs, 25)
     page_number = request.GET.get("page")
     comments = paginator.get_page(page_number)
 
-    # Cache the result (list of objects + count)
-    cache.set(cache_key, (list(comments_qs), paginator.count), 60)  # 60 seconds
+    # Cache the result (list of objects + count) for 60 seconds
+    cache.set(cache_key, (list(comments_qs), paginator.count), 60)
 
     return render(
         request,
@@ -139,7 +180,19 @@ def comment_list(request):
 def comment_preview(request):
     """
     Return sanitized HTML preview of the comment text.
-    Expects 'text' in POST data, returns JSON with 'preview_html'.
+
+    This AJAX endpoint allows users to see a live preview of their comment
+    before submission, with all HTML sanitized for security.
+
+    Args:
+        request: Django HTTP request object (POST only).
+
+    Returns:
+        JsonResponse: JSON object with 'preview_html'
+        key containing sanitized HTML.
+
+    POST Data:
+        text: Raw comment text from user input.
     """
     text = request.POST.get("text", "")
     sanitized = sanitize_comment_html(text)
@@ -147,13 +200,35 @@ def comment_preview(request):
 
 
 def captcha_image(request):
-    """Generate a CAPTCHA image and store its code under a form token."""
+    """
+    Generate a CAPTCHA image and store its code under a form token.
+
+    This endpoint creates a new CAPTCHA image with a random code,
+    stores the code in the session for later validation, and returns
+    the image as a PNG response.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: PNG image with X-Captcha-Token header
+        for form association.
+
+    Query Parameters:
+        token: Optional form token (generated if not provided).
+
+    Notes:
+        - CAPTCHA code is stored in session as 'captcha_{token}'
+        - Token is returned in X-Captcha-Token header for form submission
+    """
     token = request.GET.get("token") or uuid.uuid4().hex
     code = generate_captcha_code()
 
+    # Store CAPTCHA code in session for validation
     request.session[f"captcha_{token}"] = code
     request.session.modified = True
 
+    # Generate and return CAPTCHA image
     image = generate_captcha_image(code)
     response = HttpResponse(image, content_type="image/png")
     response["X-Captcha-Token"] = token

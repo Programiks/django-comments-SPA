@@ -1,5 +1,14 @@
-from django.test import TestCase
+"""
+Test suite for the comment system.
+
+This module contains unit tests for Comment model validation,
+including email validation, text length constraints, HTML sanitization,
+and nested comment replies.
+"""
+
 from django.core.exceptions import ValidationError
+from django.test import TestCase
+
 from .models import Comment
 
 
@@ -7,6 +16,13 @@ class CommentCreationTest(TestCase):
     """Test basic comment creation with valid data."""
 
     def test_create_comment(self):
+        """
+        Test that a comment with all required fields can be created
+        successfully.
+
+        Verifies that full_clean() passes and the comment is saved
+        to the database.
+        """
         # Create a comment with all required fields
         comment = Comment(
             author_name="test_user",
@@ -24,6 +40,11 @@ class CommentEmailValidationTest(TestCase):
     """Test email validation rules for comments."""
 
     def test_create_comment_without_email(self):
+        """
+        Test that creating a comment without an email raises ValidationError.
+
+        Email is a required field and cannot be empty.
+        """
         # Email is required; empty string should raise ValidationError
         comment = Comment(
             author_name="test_user",
@@ -34,6 +55,12 @@ class CommentEmailValidationTest(TestCase):
             comment.full_clean()
 
     def test_create_comment_with_invalid_email(self):
+        """
+        Test that creating a comment with an invalid email format
+        raises ValidationError.
+
+        Email must be a valid RFC 5322 format.
+        """
         # Invalid email format should raise ValidationError
         comment = Comment(
             author_name="test_user",
@@ -48,6 +75,11 @@ class CommentTextLengthValidationTest(TestCase):
     """Test text length constraints (min 2, max 2000 characters)."""
 
     def test_create_comment_text_too_short(self):
+        """
+        Test that text shorter than 2 characters raises ValidationError.
+
+        Comment text must be at least 2 characters long.
+        """
         # Text shorter than 2 characters should raise ValidationError
         comment = Comment(
             author_name="test_user",
@@ -58,6 +90,11 @@ class CommentTextLengthValidationTest(TestCase):
             comment.full_clean()
 
     def test_create_comment_text_min_length(self):
+        """
+        Test that text with exactly 2 characters is valid.
+
+        Verifies the minimum length boundary is accepted.
+        """
         # Text with exactly 2 characters should be valid
         comment = Comment(
             author_name="test_user",
@@ -69,6 +106,11 @@ class CommentTextLengthValidationTest(TestCase):
         self.assertEqual(Comment.objects.count(), 1)
 
     def test_create_comment_text_too_long(self):
+        """
+        Test that text longer than 2000 characters raises ValidationError.
+
+        Comment text must not exceed 2000 characters.
+        """
         # Text longer than 2000 characters should raise ValidationError
         comment = Comment(
             author_name="test_user",
@@ -79,6 +121,11 @@ class CommentTextLengthValidationTest(TestCase):
             comment.full_clean()
 
     def test_create_comment_text_max_length(self):
+        """
+        Test that text with exactly 2000 characters is valid.
+
+        Verifies the maximum length boundary is accepted.
+        """
         # Text with exactly 2000 characters should be valid
         comment = Comment(
             author_name="test_user",
@@ -94,8 +141,15 @@ class CommentCaptchaValidationTest(TestCase):
     """Test CAPTCHA validation (if applicable at model level)."""
 
     def test_create_comment_without_captcha(self):
+        """
+        Placeholder test for CAPTCHA validation.
+
+        CAPTCHA is validated in form/serializer, not in model.
+        This test can be skipped if captcha_token is not a model field.
+        """
         # CAPTCHA is validated in form/serializer, not in model.
-        # This test is a placeholder; skip if captcha_token is not a model field.
+        # This test is a placeholder; skip if captcha_token is
+        # not a model field.
         pass
 
 
@@ -103,6 +157,11 @@ class CommentHtmlValidationTest(TestCase):
     """Test HTML sanitization and security rules for comment text."""
 
     def test_create_comment_plain_text(self):
+        """
+        Test that plain text without HTML is accepted.
+
+        Verifies that comments with no HTML tags can be created successfully.
+        """
         # Plain text without HTML should be accepted
         Comment.objects.create(
             author_name="test_user",
@@ -112,6 +171,11 @@ class CommentHtmlValidationTest(TestCase):
         self.assertEqual(Comment.objects.count(), 1)
 
     def test_reject_script_tag(self):
+        """
+        Test that script tags are rejected to prevent XSS attacks.
+
+        Verifies that comments containing <script> tags raise ValidationError.
+        """
         # Script tags must be rejected to prevent XSS attacks
         with self.assertRaises(ValidationError):
             Comment(
@@ -125,6 +189,12 @@ class NestedCommentsTest(TestCase):
     """Test nested comment replies (unlimited depth)."""
 
     def test_comment_can_have_unlimited_nested_replies(self):
+        """
+        Test that comments can have unlimited nested replies.
+
+        Creates a chain of 4 comments (root + 3 levels of replies)
+        and verifies that parent-child relationships are correctly maintained.
+        """
         # Create a root comment
         root_comment = Comment.objects.create(
             author_name="root_user",

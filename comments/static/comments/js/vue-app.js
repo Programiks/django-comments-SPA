@@ -1,6 +1,25 @@
+/**
+ * Vue 3 application for the comment system.
+ *
+ * This module provides the frontend logic for:
+ * - User authentication (login/register/logout)
+ * - Comment form validation and submission
+ * - CAPTCHA handling
+ * - Live comment preview
+ * - Real-time updates via WebSocket
+ * - File attachment validation
+ *
+ * @module comments/vue-app
+ */
+
 const { createApp } = Vue;
 
 createApp({
+    /**
+     * Reactive data properties for the comment application.
+     *
+     * @returns {Object} Application state including auth, form data, and UI flags.
+     */
     data() {
         return {
             // Auth state (single modal)
@@ -31,11 +50,20 @@ createApp({
             showPreviewContainer: false,
             socket: null,
             isSubmittingComment: false,
+            // Unique token for CAPTCHA session tracking
             captchaToken: `${Date.now()}-${Math.random().toString(16).slice(2)}`
         };
     },
 
+    /**
+     * Computed properties for derived state.
+     */
     computed: {
+        /**
+         * Check if form is valid and ready for submission.
+         *
+         * @returns {boolean} True if no errors and required fields are filled.
+         */
         canSubmit() {
             return this.errors.length === 0
                 && this.form.author_name.trim()
@@ -43,17 +71,35 @@ createApp({
                 && this.form.text.trim().length >= 2;
         },
 
+        /**
+         * Generate CAPTCHA image URL with current token.
+         *
+         * @returns {string} URL to fetch CAPTCHA image.
+         */
         captchaImageUrl() {
             return `/comments/captcha/?token=${encodeURIComponent(this.captchaToken)}`;
         }
     },
 
+    /**
+     * Lifecycle hook: called after component instance is created.
+     * Initializes auth state from localStorage and connects WebSocket.
+     */
     created() {
         this.loadAuthFromStorage();
         this.connectWebSocket();
     },
 
+    /**
+     * Component methods for authentication, validation, and comment handling.
+     */
     methods: {
+        /**
+         * Establish WebSocket connection for real-time comment notifications.
+         *
+         * Uses wss:// for HTTPS and ws:// for HTTP connections.
+         * Reloads page when new comment notification is received.
+         */
         connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
 
@@ -62,7 +108,6 @@ createApp({
             );
 
             this.socket.onopen = () => {};
-
             this.socket.onerror = () => {};
 
             this.socket.onmessage = (event) => {
@@ -74,6 +119,12 @@ createApp({
 
         // ---------- Auth methods ----------
 
+        /**
+         * Load authentication state from localStorage.
+         *
+         * Restores access token, username, and email from previous session.
+         * Pre-fills comment form with stored user data if available.
+         */
         loadAuthFromStorage() {
             const token = localStorage.getItem('access_token');
             const username = localStorage.getItem('current_username');
@@ -94,6 +145,11 @@ createApp({
             }
         },
 
+        /**
+         * Save access token and username to localStorage.
+         *
+         * @param {string} token - JWT access token from authentication response.
+         */
         saveToken(token) {
             this.accessToken = token;
             this.isLoggedIn = true;
@@ -104,6 +160,9 @@ createApp({
             }
         },
 
+        /**
+         * Clear authentication state and remove tokens from localStorage.
+         */
         clearToken() {
             this.accessToken = null;
             this.isLoggedIn = false;
@@ -113,6 +172,11 @@ createApp({
             localStorage.removeItem('current_email');
         },
 
+        /**
+         * Open authentication modal in login mode.
+         *
+         * Resets auth form to initial state.
+         */
         openLoginModal() {
             this.isLoginMode = true;
             this.authForm = {
@@ -124,19 +188,33 @@ createApp({
             this.showAuthModal = true;
         },
 
+        /**
+         * Close authentication modal.
+         */
         closeAuthModal() {
             this.showAuthModal = false;
         },
 
+        /**
+         * Switch modal to registration mode.
+         */
         switchToRegister() {
             this.isLoginMode = false;
             this.authForm.passwordConfirm = '';
         },
 
+        /**
+         * Switch modal to login mode.
+         */
         switchToLogin() {
             this.isLoginMode = true;
         },
 
+        /**
+         * Handle authentication form submission (login or register).
+         *
+         * @async
+         */
         async handleAuthSubmit() {
             if (!this.isLoginMode) {
                 await this.register();
@@ -146,6 +224,14 @@ createApp({
             await this.login();
         },
 
+        /**
+         * Authenticate user with username and password.
+         *
+         * Sends POST request to /api/auth/login/ and stores JWT token on success.
+         * Pre-fills comment form with user data from response.
+         *
+         * @async
+         */
         async login() {
             if (!this.authForm.username || !this.authForm.password) {
                 alert('Username and password are required.');
@@ -188,6 +274,14 @@ createApp({
             }
         },
 
+        /**
+         * Register new user and authenticate.
+         *
+         * Validates password match, sends POST to /api/auth/register/,
+         * then automatically logs in the user.
+         *
+         * @async
+         */
         async register() {
             if (!this.authForm.username || !this.authForm.password) {
                 alert('Username and password are required.');
@@ -222,6 +316,7 @@ createApp({
                     throw new Error(errorData.detail || 'Registration failed.');
                 }
 
+                // Auto-login after successful registration
                 const loginResponse = await fetch('/api/auth/login/', {
                     method: 'POST',
                     headers: {
@@ -257,6 +352,11 @@ createApp({
             }
         },
 
+        /**
+         * Logout user and clear authentication state.
+         *
+         * Resets form fields to empty state.
+         */
         logout() {
             this.clearToken();
             this.form.author_name = '';
@@ -265,6 +365,14 @@ createApp({
 
         // ---------- Comment methods ----------
 
+        /**
+         * Insert HTML tag at cursor position in comment textarea.
+         *
+         * For <a> tags, prompts user for URL.
+         * For other tags, wraps selected text.
+         *
+         * @param {string} tag - Tag name to insert (e.g., 'strong', 'code', 'a').
+         */
         insertTag(tag) {
             const textarea = document.getElementById('id_text');
 
@@ -302,11 +410,21 @@ createApp({
             });
         },
 
+        /**
+         * Handle file attachment input change.
+         *
+         * @param {Event} event - File input change event.
+         */
         handleAttachmentChange(event) {
             this.form.attachment = event.target.files[0] || null;
             this.validateForm();
         },
 
+        /**
+         * Validate author name field.
+         *
+         * @returns {string|null} Error message or null if valid.
+         */
         validateAuthorName() {
             const name = this.form.author_name.trim();
 
@@ -323,6 +441,11 @@ createApp({
             return null;
         },
 
+        /**
+         * Validate email field.
+         *
+         * @returns {string|null} Error message or null if valid.
+         */
         validateEmail() {
             const email = this.form.email.trim();
 
@@ -339,6 +462,11 @@ createApp({
             return null;
         },
 
+        /**
+         * Validate home page URL field.
+         *
+         * @returns {string|null} Error message or null if valid/empty.
+         */
         validateHomePage() {
             const url = this.form.home_page.trim();
 
@@ -355,6 +483,11 @@ createApp({
             return null;
         },
 
+        /**
+         * Validate CAPTCHA field.
+         *
+         * @returns {string|null} Error message or null if valid.
+         */
         validateCaptcha() {
             const captcha = this.form.captcha.trim();
 
@@ -365,6 +498,14 @@ createApp({
             return null;
         },
 
+        /**
+         * Validate HTML tags in comment text.
+         *
+         * Checks that only allowed tags are used and they are properly nested.
+         * Allowed tags: a, code, i, strong.
+         *
+         * @returns {string|null} Error message or null if valid.
+         */
         validateTextTags() {
             const text = this.form.text;
 
@@ -413,6 +554,11 @@ createApp({
             return null;
         },
 
+        /**
+         * Validate comment text length.
+         *
+         * @returns {string|null} Error message or null if valid.
+         */
         validateText() {
             const text = this.form.text.trim();
 
@@ -423,6 +569,13 @@ createApp({
             return null;
         },
 
+        /**
+         * Validate file attachment type and size.
+         *
+         * Allowed: JPG, PNG, GIF images; TXT files (max 100 KB).
+         *
+         * @returns {string|null} Error message or null if valid/no attachment.
+         */
         validateAttachment() {
             const file = this.form.attachment;
 
@@ -446,6 +599,11 @@ createApp({
             return null;
         },
 
+        /**
+         * Run all form validations and populate errors array.
+         *
+         * @returns {boolean} True if no validation errors.
+         */
         validateForm() {
             const errors = [];
 
@@ -490,6 +648,9 @@ createApp({
             return errors.length === 0;
         },
 
+        /**
+         * Clear attachment file and reset file input.
+         */
         clearAttachment() {
             this.form.attachment = null;
 
@@ -499,6 +660,15 @@ createApp({
             }
         },
 
+        /**
+         * Handle comment form submission.
+         *
+         * Validates form, sends AJAX POST request, and reloads page on success.
+         * Requires login for file attachments.
+         *
+         * @async
+         * @param {Event} event - Form submit event.
+         */
         async handleSubmit(event) {
             event.preventDefault();
 
@@ -553,6 +723,7 @@ createApp({
                     throw new Error('Submit failed.');
                 }
 
+                // Reset form on success
                 this.form.author_name = '';
                 this.form.email = '';
                 this.form.home_page = '';
@@ -578,6 +749,13 @@ createApp({
             }
         },
 
+        /**
+         * Generate and display sanitized HTML preview of comment text.
+         *
+         * Sends POST request to /comments/preview/ endpoint.
+         *
+         * @async
+         */
         async showPreview() {
             if (!this.validateForm()) {
                 this.previewHtml = '';
