@@ -36,4 +36,4 @@ COPY . .
 EXPOSE 8000
 
 # Run Django development server (bind to 0.0.0.0 for external access)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && daphne -b 0.0.0.0 -p $PORT config.asgi:application"]
